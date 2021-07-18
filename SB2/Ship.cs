@@ -9,7 +9,7 @@ using System.Drawing;
 namespace SB2
 {
     public class Ship
-    { 
+    {
         public Coordinates[] Coordinates { get; set; }
         public int LargeOfShip { get; set; }
         public bool isAlive = true;
@@ -23,11 +23,16 @@ namespace SB2
         }
         public void ClearCoordinates()
         {
-            for(int i = 0; i < LargeOfShip; i++)
+            for (int i = 0; i < LargeOfShip; i++)
             {
                 Coordinates[i] = new Coordinates(0, 0);
             }
-                NumberOfSet = 0;
+            NumberOfSet = 0;
+        }
+
+        public virtual void BlockCells(Field field, )
+        {
+
         }
     }
 }

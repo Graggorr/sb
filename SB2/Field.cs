@@ -62,13 +62,12 @@ namespace SB2
             {
                 return;
             }
-            else
-            {
-                map[y, x].NumberOfSet = numberOfSet;
-                map[y, x].Status = status;
-                ChangeColor(x, y, player);
-            }
+
+            map[y, x].NumberOfSet = numberOfSet;
+            map[y, x].Status = status;
+            ChangeColor(x, y, player);
         }
+
         void ChangeColor(int x, int y, bool player)
         {
             if(player == true)
@@ -78,6 +77,12 @@ namespace SB2
                 if (map[y, x].Status == CellStatus.Blocked)
                     map[y, x].BackColor = Color.Black;
             }
+
+            //map[y, x].BackColor = map[y, x].Status switch
+            //{
+            //    CellStatus.HasShip => Color.Blue,
+            //    CellStatus.Blocked => Color.Black
+            //};
         }
         public void BattleColors(Cell cell)
         {
@@ -97,6 +102,7 @@ namespace SB2
                         CheckCell(j, i) == true)
                     {
 
+
                         switch (ship.LargeOfShip)
                         {
                             case 1:
@@ -110,7 +116,7 @@ namespace SB2
                                 ChangeStatus(j, i - 1, cellStatus, ship.NumberOfSet, player);
                                 ChangeStatus(j + 1, i - 1, cellStatus, ship.NumberOfSet, player);
                                 ship.Coordinates[0] = new Coordinates(j, i);
-                                goto LoopEnd;
+                                return;
                             case 2:
                                 if (CheckCell(j + 1, i) == true)
                                 {
@@ -128,7 +134,7 @@ namespace SB2
                                     ChangeStatus(j + 2, i - 1, cellStatus, ship.NumberOfSet, player);
                                     ship.Coordinates[0] = new Coordinates(j, i);
                                     ship.Coordinates[1] = new Coordinates(j + 1, i);
-                                    goto LoopEnd;
+                                    return;
                                 }
                                 else
                                 {
@@ -150,7 +156,7 @@ namespace SB2
                                         ship.Coordinates[1] = new Coordinates(j - 1, i);
                                     }
                                 }
-                                goto LoopEnd;
+                                return;
                             case 3:
                                 if (CheckCell(j + 1, i) == true && CheckCell(j + 2, i) == true)
                                 {
@@ -172,7 +178,7 @@ namespace SB2
                                     ship.Coordinates[0] = new Coordinates(j, i);
                                     ship.Coordinates[1] = new Coordinates(j, i + 1);
                                     ship.Coordinates[2] = new Coordinates(j, i + 2);
-                                    goto LoopEnd;
+                                    return;
                                 }
                                 else
                                 {
@@ -198,7 +204,7 @@ namespace SB2
                                         ship.Coordinates[2] = new Coordinates(j, i - 2);
                                     }
                                 }
-                                goto LoopEnd;
+                                return;
                             case 4:
                                 if (CheckCell(j + 1, i) == true && CheckCell(j + 2, i) == true && CheckCell(j + 3, i) == true)
                                 {
@@ -224,7 +230,7 @@ namespace SB2
                                     ship.Coordinates[1] = new Coordinates(j, i + 1);
                                     ship.Coordinates[2] = new Coordinates(j, i + 2);
                                     ship.Coordinates[3] = new Coordinates(j, i + 3);
-                                    goto LoopEnd;
+                                    return;
                                 }
 
                                 else
@@ -255,12 +261,11 @@ namespace SB2
                                         ship.Coordinates[3] = new Coordinates(j, i - 3);
                                     }
                                 }
-                                goto LoopEnd;
+                                return;
                         }
                     }
                 }
             }
-        LoopEnd: return;
         }
         public void UnblockCells(Ship ship)
         {

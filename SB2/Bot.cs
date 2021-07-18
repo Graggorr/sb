@@ -16,6 +16,14 @@ namespace SB2
         }
         public void SetShips(Cell cell)
         {
+            //foreach (var warships in Warships)
+            //{
+            //    foreach (var warship in warships.Value)
+            //    {
+            //        Stack(warship, cell, false, CellStatus.HasShipHidden);
+            //    }
+            //}
+
             foreach(var key in Keys)
             {
                 foreach(var ship in Warships[key])

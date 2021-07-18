@@ -55,7 +55,7 @@ namespace SB2
 
         public void SetShips(string Key, Cell cell, bool player)
         {
-            foreach(var ship in Warships[Key])
+            foreach (var ship in Warships[Key])
             {
                 if (ship.installed == false)
                 {
@@ -70,8 +70,10 @@ namespace SB2
         public void RemoveShips(Ship ship)
         {
             NumberOfSet--;
+
             ship = Ship.Pop();
             ship.installed = false;
+
             field.UnblockCells(ship);
             ship.ClearCoordinates();
         }
@@ -80,6 +82,7 @@ namespace SB2
         {
             Ship.Push(ship);
             field.BlockCells(cell, ship, shipStatus, CellStatus.Blocked, player);
+
             ship.installed = true;
             NumberOfSet++;
             ship.NumberOfSet = NumberOfSet;
@@ -87,49 +90,44 @@ namespace SB2
 
         public void Strike(Cell clickedcell)
         {
-            if((clickedcell.Status != CellStatus.EmptyStriked && clickedcell.Status != CellStatus.ShipDamaged)
-             && yourTurn == true)
-            {
-                if(clickedcell.Status == CellStatus.Empty)
-                {
-                    clickedcell.Status = CellStatus.EmptyStriked;
-                    clickedcell.BackColor = Color.Black;
-                }
-                else
-                {
-                    if(clickedcell.Status == CellStatus.HasShip)
-                    {
-                        clickedcell.Status = CellStatus.ShipDamaged;
-                        clickedcell.BackColor = Color.Red;
-                        CheckShips();
-                    }
-                }
-                yourTurn = false;
-            }
-            else
+            if (clickedcell.Status == CellStatus.EmptyStriked || clickedcell.Status == CellStatus.ShipDamaged ||
+                !yourTurn)
             {
                 return;
             }
+
+            if (clickedcell.Status == CellStatus.Empty)
+            {
+                clickedcell.Status = CellStatus.EmptyStriked;
+                clickedcell.BackColor = Color.Black;
+            }
+            if (clickedcell.Status == CellStatus.HasShip)
+            {
+                clickedcell.Status = CellStatus.ShipDamaged;
+                clickedcell.BackColor = Color.Red;
+                CheckShips();
+            }
+            yourTurn = false;
         }
 
         public void CheckShips()
         {
-           for(int i = 0; i < 10; i++)
-           {
-               for(int j = 0; j < 10; j++)
-               {
-                   if(field.map[i,j].Status == CellStatus.HasShip)
-                   {
-                       goto LoopEnd;
-                   }
-                   else
-                   {
-                       Lost();
-                   }
-               }
-           }
-           LoopEnd:
-           return;
+            for (int i = 0; i < 10; i++)
+            {
+                for (int j = 0; j < 10; j++)
+                {
+                    if (field.map[i, j].Status == CellStatus.HasShip)
+                    {
+                        goto LoopEnd;
+                    }
+                    else
+                    {
+                        Lost();
+                    }
+                }
+            }
+        LoopEnd:
+            return;
         }
 
         public bool DeadShip(Cell cell)
@@ -140,28 +138,28 @@ namespace SB2
             }
             else
             {
-                for(int i = 0; i < 10; i++)
+                for (int i = 0; i < 10; i++)
                 {
-                    for(int j = 0; j < 10; j++)
+                    for (int j = 0; j < 10; j++)
                     {
-                        if(field.map[i,j].NumberOfSet == cell.NumberOfSet && (field.map[i,j].Status == CellStatus.HasShip || field.map[i,j].Status == CellStatus.HasShipHidden))
+                        if (field.map[i, j].NumberOfSet == cell.NumberOfSet && (field.map[i, j].Status == CellStatus.HasShip || field.map[i, j].Status == CellStatus.HasShipHidden))
                         {
                             return true;
                         }
                     }
                 }
             }
-           return false;
+            return false;
         }
 
         private void Lost()
         {
-                DialogResult result = MessageBox.Show(
-                    "The game is over",
-                    "Message",
-                    MessageBoxButtons.OK);
-                if(result == DialogResult.OK)
-                    Application.Exit();
+            DialogResult result = MessageBox.Show(
+                "The game is over",
+                "Message",
+                MessageBoxButtons.OK);
+            if (result == DialogResult.OK)
+            {Application.Exit();}
         }
     }
 }
