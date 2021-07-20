@@ -11,7 +11,6 @@ namespace SB2
     public class Field
     {
         public Cell[,] map = new Cell[10, 10];
-        public ImageList ImageList { get; set; }
 
         public Field(bool player)
         {
@@ -41,11 +40,11 @@ namespace SB2
         {
             if (x > 9 || x < 0 || y > 9 || y < 0)
             {
-                 return false;
+                return false;
             }
             else
             {
-                if(map[y,x].Status != CellStatus.Empty)
+                if (map[y, x].Status != CellStatus.Empty)
                 {
                     return false;
                 }
@@ -70,19 +69,15 @@ namespace SB2
 
         void ChangeColor(int x, int y, bool player)
         {
-            if(player == true)
+            if (player == true)
             {
-                if (map[y, x].Status == CellStatus.HasShip)
-                    map[y, x].BackColor = Color.Blue;
-                if (map[y, x].Status == CellStatus.Blocked)
-                    map[y, x].BackColor = Color.Black;
+                map[y, x].BackColor = map[y, x].Status switch
+                {
+                    CellStatus.HasShip => Color.Blue,
+                    CellStatus.Blocked => Color.Black,
+                    _ => Color.LightGray
+                };
             }
-
-            //map[y, x].BackColor = map[y, x].Status switch
-            //{
-            //    CellStatus.HasShip => Color.Blue,
-            //    CellStatus.Blocked => Color.Black
-            //};
         }
         public void BattleColors(Cell cell)
         {
@@ -118,7 +113,7 @@ namespace SB2
                                 ship.Coordinates[0] = new Coordinates(j, i);
                                 return;
                             case 2:
-                                if (CheckCell(j + 1, i) == true)
+                                if (CheckCell(j + 1, i))
                                 {
                                     ChangeStatus(j, i, shipStatus, ship.NumberOfSet, player);
                                     ChangeStatus(j + 1, i, shipStatus, ship.NumberOfSet, player);
@@ -138,7 +133,7 @@ namespace SB2
                                 }
                                 else
                                 {
-                                    if (CheckCell(j - 1, i) == true)
+                                    if (CheckCell(j - 1, i))
                                     {
                                         ChangeStatus(j, i, shipStatus, ship.NumberOfSet, player);
                                         ChangeStatus(j - 1, i, shipStatus, ship.NumberOfSet, player);
@@ -158,7 +153,7 @@ namespace SB2
                                 }
                                 return;
                             case 3:
-                                if (CheckCell(j + 1, i) == true && CheckCell(j + 2, i) == true)
+                                if (CheckCell(j + 1, i) && CheckCell(j + 2, i))
                                 {
                                     ChangeStatus(j, i, shipStatus, ship.NumberOfSet, player);
                                     ChangeStatus(j + 1, i, shipStatus, ship.NumberOfSet, player);
@@ -182,7 +177,7 @@ namespace SB2
                                 }
                                 else
                                 {
-                                    if (CheckCell(j - 1, i) == true && CheckCell(j - 2, i) == true)
+                                    if (CheckCell(j - 1, i) && CheckCell(j - 2, i))
                                     {
                                         ChangeStatus(j, i, shipStatus, ship.NumberOfSet, player);
                                         ChangeStatus(j - 1, i, shipStatus, ship.NumberOfSet, player);
@@ -206,7 +201,7 @@ namespace SB2
                                 }
                                 return;
                             case 4:
-                                if (CheckCell(j + 1, i) == true && CheckCell(j + 2, i) == true && CheckCell(j + 3, i) == true)
+                                if (CheckCell(j + 1, i) && CheckCell(j + 2, i) && CheckCell(j + 3, i))
                                 {
                                     ChangeStatus(j, i, shipStatus, ship.NumberOfSet, player);
                                     ChangeStatus(j + 1, i, shipStatus, ship.NumberOfSet, player);
@@ -235,7 +230,7 @@ namespace SB2
 
                                 else
                                 {
-                                    if (CheckCell(j - 1, i) == true && CheckCell(j - 2, i) == true && CheckCell(j - 3, i) == true)
+                                    if (CheckCell(j - 1, i) && CheckCell(j - 2, i) && CheckCell(j - 3, i))
                                     {
                                         ChangeStatus(j, i, shipStatus, ship.NumberOfSet, player);
                                         ChangeStatus(j - 1, i, shipStatus, ship.NumberOfSet, player);
@@ -269,11 +264,11 @@ namespace SB2
         }
         public void UnblockCells(Ship ship)
         {
-            for(int i = 0; i < 10; i++)
+            for (int i = 0; i < 10; i++)
             {
-                for(int j = 0; j < 10; j++)
+                for (int j = 0; j < 10; j++)
                 {
-                    if(map[i,j].NumberOfSet == ship.NumberOfSet)
+                    if (map[i, j].NumberOfSet == ship.NumberOfSet)
                     {
                         map[i, j].ClearCell();
                         map[i, j].BackColor = Color.LightGray;
@@ -283,16 +278,16 @@ namespace SB2
         }
         public void BlockDeadShipCell(Ship ship)
         {
-            for(int i = 0; i < 10; i++)
+            for (int i = 0; i < 10; i++)
             {
-                for(int j = 0; j < 10; j++)
+                for (int j = 0; j < 10; j++)
                 {
-                    if(ship.NumberOfSet == map[i,j].NumberOfSet && (map[i,j].Status == CellStatus.EmptyStriked || map[i,j].Status == CellStatus.Empty))
+                    if (ship.NumberOfSet == map[i, j].NumberOfSet && (map[i, j].Status == CellStatus.EmptyStriked || map[i, j].Status == CellStatus.Empty))
                     {
-                        map[i,j].BackColor = Color.Black;
+                        map[i, j].BackColor = Color.Black;
                     }
                 }
             }
         }
-    } 
+    }
 }

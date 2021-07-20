@@ -216,7 +216,7 @@ namespace SB2
 
         private void RemoveShipButton_Click(object sender, EventArgs e)
         {
-            foreach(var ship in player.Ship)
+            foreach(var ship in player.ShipStack)
             {
                 player.RemoveShips(ship);
                 break;

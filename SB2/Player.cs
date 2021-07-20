@@ -12,10 +12,10 @@ namespace SB2
     {
         public Field field;
         public bool yourTurn = true;
-        public static string QUADROKEY = "QUADRO";
-        public static string TRIPLEKEY = "TRIPLE";
-        public static string DOUBLEKEY = "DOUBLE";
-        public static string SINGLEKEY = "SINGLE";
+        public const string QUADROKEY = "QUADRO";
+        public const string TRIPLEKEY = "TRIPLE";
+        public const string DOUBLEKEY = "DOUBLE";
+        public const string SINGLEKEY = "SINGLE";
         public static int NumberOfSet = 0;
         public bool FoundShip { get; set; }
 
@@ -25,7 +25,7 @@ namespace SB2
         public List<Ship> QuadroRankShips { get; private set; }
         public List<string> Keys { get; private set; }
         public Dictionary<string, List<Ship>> Warships { get; private set; }
-        public Stack<Ship> Ship { get; set; }
+        public Stack<Ship> ShipStack { get; set; }
 
         public Player()
         {
@@ -50,7 +50,7 @@ namespace SB2
                 { QUADROKEY, QuadroRankShips }
             };
 
-            Ship = new Stack<Ship>();
+            ShipStack = new Stack<Ship>();
         }
 
         public void SetShips(string Key, Cell cell, bool player)
@@ -71,7 +71,7 @@ namespace SB2
         {
             NumberOfSet--;
 
-            ship = Ship.Pop();
+            ship = ShipStack.Pop();
             ship.installed = false;
 
             field.UnblockCells(ship);
@@ -80,18 +80,19 @@ namespace SB2
 
         public void Stack(Ship ship, Cell cell, bool player, CellStatus shipStatus)
         {
-            Ship.Push(ship);
             field.BlockCells(cell, ship, shipStatus, CellStatus.Blocked, player);
 
             ship.installed = true;
             NumberOfSet++;
             ship.NumberOfSet = NumberOfSet;
+            
+            ShipStack.Push(ship);
         }
 
         public void Strike(Cell clickedcell)
         {
-            if (clickedcell.Status == CellStatus.EmptyStriked || clickedcell.Status == CellStatus.ShipDamaged ||
-                !yourTurn)
+            if (clickedcell.Status == CellStatus.EmptyStriked || clickedcell.Status == CellStatus.ShipDamaged 
+                ||!yourTurn)
             {
                 return;
             }

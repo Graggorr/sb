@@ -21,6 +21,7 @@ namespace SB2
             LargeOfShip = largeOfShip;
             Coordinates = new Coordinates[LargeOfShip];
         }
+
         public void ClearCoordinates()
         {
             for (int i = 0; i < LargeOfShip; i++)
@@ -30,7 +31,7 @@ namespace SB2
             NumberOfSet = 0;
         }
 
-        public virtual void BlockCells(Field field, )
+        public virtual void BlockCells(Field field)
         {
 
         }
