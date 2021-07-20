@@ -19,19 +19,19 @@ namespace SB2
             InitializeComponent();
             CreateMap();
         }
-        
+
         private void CreateGame(object sender, EventArgs e)
         {
             Button clickedbutton = sender as Button;
             player = new Player();
             bot = new Bot();
             SetBotShips();
-            for(int i = 0; i < 10; i++)
+            for (int i = 0; i < 10; i++)
             {
-                for(int j = 0; j < 10; j++)
+                for (int j = 0; j < 10; j++)
                 {
-                    Controls.Add(player.field.map[i,j]);
-                    Controls.Add(bot.field.map[i,j]);
+                    Controls.Add(player.field.map[i, j]);
+                    Controls.Add(bot.field.map[i, j]);
                     player.field.map[i, j].Click += new EventHandler(SetPlayerShips);
                 }
             }
@@ -42,7 +42,7 @@ namespace SB2
             RemoveShipButton.Visible = true;
             clickedbutton.Click -= new EventHandler(CreateGame);
             clickedbutton.Click += new EventHandler(StartGame);
-            
+
         }
         private void CreateMap()
         {
@@ -66,8 +66,7 @@ namespace SB2
                     {
                         player.field.map[i, j].Click -= new EventHandler(SetPlayerShips);
                         player.field.BattleColors(player.field.map[i, j]);
-                        bot.field.BattleColors(player.field.map[i,j]);
-                        bot.field.map[i, j].Click += new EventHandler(PrepareGuns);
+                        bot.field.BattleColors(bot.field.map[i, j]);
                     }
                 }
                 Controls.Remove(clickedButton);
@@ -84,19 +83,13 @@ namespace SB2
             }
         }
 
-        private void PrepareGuns(object sender, EventArgs e)
-        {
-            Cell clickedcell = sender as Cell;
-            player.Strike(clickedcell);
-        }
-
         private void War()
         {
-            for(int i = 0; i < 10; i++)
+            for (int i = 0; i < 10; i++)
             {
-                for(int j = 0; j < 10; j++)
+                for (int j = 0; j < 10; j++)
                 {
-                    bot.field.map[i,j].Click += new EventHandler(PlayerStrike);
+                    bot.field.map[i, j].Click += new EventHandler(PlayerStrike);
                 }
             }
             BotStrike();
@@ -108,7 +101,7 @@ namespace SB2
             if (bot.yourTurn == true)
             {
                 int x, y, x1;
-                LoopEnd:
+            LoopEnd:
                 x = rng.Next(0, 9);
                 y = rng.Next(0, 9);
                 x1 = x + 1;
@@ -116,36 +109,32 @@ namespace SB2
                 {
                     if (player.field.map[y, x].Status == CellStatus.HasShip)
                     {
-                        player.field.map[y, x].Status = CellStatus.ShipDamaged;
-                        player.field.map[y, x].BackColor = System.Drawing.Color.Red;
+                        player.field.ChangeColor(player.field.map[y, x], CellStatus.ShipDamaged, Color.Red);
                     RepeatShot:
-                        if (bot.DeadShip(player.field.map[y, x]) == false && player.field.CheckCell(x1, y) == true && player.field.map[y, x].Status == CellStatus.HasShip)
+                        if (!bot.DeadShip(player.field.map[y, x]) && player.field.CheckCell(x1, y) && player.field.map[y, x].Status == CellStatus.HasShip)
                         {
-                            player.field.map[y, x1].Status = CellStatus.ShipDamaged;
-                            player.field.map[y, x1].BackColor = System.Drawing.Color.Red;
+                            player.field.ChangeColor(player.field.map[y, x1], CellStatus.ShipDamaged, Color.Red);
                             x++;
                             x1++;
                             goto RepeatShot;
                         }
                         else
                         {
-                            player.field.map[y, x1].Status = CellStatus.EmptyStriked;
-                            player.field.map[y, x1].BackColor = System.Drawing.Color.Black;
+                            player.field.ChangeColor(player.field.map[y, x1], CellStatus.EmptyStriked, Color.Black);
                             bot.yourTurn = false;
+                            player.yourTurn = true; 
                         }
                     }
                     else
                     {
-                        player.field.map[y, x].Status = CellStatus.EmptyStriked;
-                        player.field.map[y, x].BackColor = System.Drawing.Color.Black;
+                        player.field.ChangeColor(player.field.map[y, x], CellStatus.EmptyStriked, Color.Black);
                         bot.yourTurn = false;
+                        player.yourTurn = true;
                     }
-                    bot.CheckShips();
+                    player.CheckShips();
+                    return;
                 }
-                else
-                {
-                    goto LoopEnd;
-                }
+                goto LoopEnd;
             }
         }
 
@@ -158,32 +147,34 @@ namespace SB2
                 {
                     if (clickedcell.Status == CellStatus.Empty)
                     {
-                        clickedcell.Status = CellStatus.EmptyStriked;
-                        clickedcell.BackColor = Color.Black;
+                        bot.field.ChangeColor(clickedcell, CellStatus.EmptyStriked, Color.Black);
+
                         player.yourTurn = false;
+                        bot.yourTurn = true;
+
                         BotStrike();
                     }
-                    else
+                    if (clickedcell.Status == CellStatus.HasShipHidden)
                     {
-                        if (clickedcell.Status == CellStatus.HasShip)
+                        bot.field.ChangeColor(clickedcell, CellStatus.ShipDamaged, Color.Red);
+
+                        if (!bot.DeadShip(clickedcell))
                         {
-                            clickedcell.Status = CellStatus.ShipDamaged;
-                            clickedcell.BackColor = Color.Red;
+                            MessageBox.Show("Ship is dead");
+                            bot.field.BlockDeadShipCell(clickedcell);
                         }
                     }
-                    player.CheckShips();
+
+                    bot.CheckShips();
                 }
-                else
-                {
-                    return;
-                }
+                return;
             }
         }
 
         private void SetPlayerShips(object sender, EventArgs e)
         {
             Cell clickedCell = sender as Cell;
-            if(SingleRankButton.Checked == true)
+            if (SingleRankButton.Checked == true)
             {
                 player.SetShips(Player.SINGLEKEY, clickedCell, true);
             }
@@ -203,20 +194,20 @@ namespace SB2
 
         private void SetBotShips()
         {
-           int x, y;
-           Random rng = new Random();
-           for(int i = 0; i < 10; i++)
-           {
-              x = rng.Next(0,9);
-              y = rng.Next(0,9);
-              bot.SetShips(bot.field.map[y,x]);
-           }
+            int x, y;
+            Random rng = new Random();
+            while (bot.Count != 10)
+            {
+                x = rng.Next(0, 9);
+                y = rng.Next(0, 9);
+                bot.SetShips(bot.field.map[y, x]);
+            }
         }
 
 
         private void RemoveShipButton_Click(object sender, EventArgs e)
         {
-            foreach(var ship in player.ShipStack)
+            foreach (var ship in player.ShipStack)
             {
                 player.RemoveShips(ship);
                 break;

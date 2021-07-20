@@ -55,6 +55,12 @@ namespace SB2
             }
         }
 
+        public void ChangeColor(Cell cell, CellStatus status, Color color)
+        {
+            cell.Status = status;
+            cell.BackColor = color;
+        }
+
         public void ChangeStatus(int x, int y, CellStatus status, int numberOfSet, bool player)
         {
             if (x > 9 || x < 0 || y > 9 || y < 0)
@@ -69,24 +75,75 @@ namespace SB2
 
         void ChangeColor(int x, int y, bool player)
         {
-            if (player == true)
+            //if (player == true)
+            //{
+            map[y, x].BackColor = map[y, x].Status switch
             {
-                map[y, x].BackColor = map[y, x].Status switch
-                {
-                    CellStatus.HasShip => Color.Blue,
-                    CellStatus.Blocked => Color.Black,
-                    _ => Color.LightGray
-                };
-            }
+                CellStatus.HasShip => Color.Blue,
+                CellStatus.Blocked => Color.Black,
+                CellStatus.HasShipHidden => Color.Green,
+                _ => Color.LightGray
+            };
+            //}
         }
         public void BattleColors(Cell cell)
         {
-            if (cell.Status == CellStatus.Blocked)
+            if (cell.Status != CellStatus.HasShip && cell.Status != CellStatus.HasShipHidden)
             {
-                cell.BackColor = Color.LightGray;
+                cell.BackColor = Button.DefaultBackColor;
                 cell.Status = CellStatus.Empty;
             }
         }
+
+        public bool CheckShipCell(Cell cell, Ship ship)
+        {
+            for(int i = 0; i < 10; i++)
+            {
+                for(int j = 10; j < 10; j++)
+                {
+                    if(cell.Coordinates.X == map[i,j].Coordinates.X && cell.Coordinates.Y == map[i, j].Coordinates.Y && CheckCell(j, i))
+                    {
+                        switch (ship.LargeOfShip)
+                        {
+                            case 1:
+                                return true;
+                            case 2:
+                                if (CheckCell(j + 1, i))
+                                {
+                                    return true;
+                                }
+                                if (CheckCell(j - 1, i))
+                                {
+                                    return true;
+                                }
+                                return false;
+                            case 3:
+                                if (CheckCell(j + 1, i) && CheckCell(j + 2, i))
+                                {
+                                    return true;
+                                }
+                                if (CheckCell(j - 1, i) && CheckCell(j - 2, i))
+                                {
+                                    return true;
+                                }
+                                return false;
+                            case 4:
+                                if (CheckCell(j + 1, i) && CheckCell(j + 2, i) && CheckCell(j + 3, i))
+                                {
+                                    return true;
+                                }
+                                if (CheckCell(j - 1, i) && CheckCell(j - 2, i) && CheckCell(j - 3, i))
+                                {
+                                    return true;
+                                }
+                                    return false;
+                        }
+                    }
+                }
+            }
+            return false;
+        }
+
         public void BlockCells(Cell cell, Ship ship, CellStatus shipStatus, CellStatus cellStatus, bool player)
         {
             for (int i = 0; i < 10; i++)
@@ -94,7 +151,7 @@ namespace SB2
                 for (int j = 0; j < 10; j++)
                 {
                     if (cell.Coordinates.X == map[i, j].Coordinates.X && cell.Coordinates.Y == map[i, j].Coordinates.Y &&
-                        CheckCell(j, i) == true)
+                        CheckCell(j, i))
                     {
 
 
@@ -254,13 +311,15 @@ namespace SB2
                                         ship.Coordinates[1] = new Coordinates(j, i - 1);
                                         ship.Coordinates[2] = new Coordinates(j, i - 2);
                                         ship.Coordinates[3] = new Coordinates(j, i - 3);
+                                        return;
                                     }
+                                    return;
                                 }
-                                return;
                         }
                     }
                 }
             }
+            return;
         }
         public void UnblockCells(Ship ship)
         {
@@ -276,13 +335,13 @@ namespace SB2
                 }
             }
         }
-        public void BlockDeadShipCell(Ship ship)
+        public void BlockDeadShipCell(Cell cell)
         {
             for (int i = 0; i < 10; i++)
             {
                 for (int j = 0; j < 10; j++)
                 {
-                    if (ship.NumberOfSet == map[i, j].NumberOfSet && (map[i, j].Status == CellStatus.EmptyStriked || map[i, j].Status == CellStatus.Empty))
+                    if (cell.NumberOfSet == map[i, j].NumberOfSet && map[i,j].Status != CellStatus.ShipDamaged)
                     {
                         map[i, j].BackColor = Color.Black;
                     }

@@ -6,8 +6,9 @@ using System.Threading.Tasks;
 
 namespace SB2
 {
-    public class Bot: Player
+    public class Bot : Player
     {
+        public int Count = 0;
         public Bot()
         {
             field = new Field(false);
@@ -16,24 +17,32 @@ namespace SB2
         }
         public void SetShips(Cell cell)
         {
-            //foreach (var warships in Warships)
-            //{
-            //    foreach (var warship in warships.Value)
-            //    {
-            //        Stack(warship, cell, false, CellStatus.HasShipHidden);
-            //    }
-            //}
-
-            foreach(var key in Keys)
+            foreach (var warships in Warships)
             {
-                foreach(var ship in Warships[key])
+                foreach (var ship in warships.Value)
                 {
-                    Stack(ship, cell, false, CellStatus.HasShipHidden);
-                    goto LoopEnd;
+                    if (!ship.installed && StackBot(ship, cell, false, CellStatus.HasShipHidden))
+                    {
+                        Count++;
+                    }
                 }
             }
-            LoopEnd:
-            return;
+        }
+        public bool StackBot(Ship ship, Cell cell, bool player, CellStatus shipStatus)
+        {
+            if (!field.CheckShipCell(cell, ship))
+                return false;
+
+            field.BlockCells(cell, ship, shipStatus, CellStatus.Blocked, player);
+
+            NumberOfSet++;
+
+            ship.installed = true;
+            ship.NumberOfSet = NumberOfSet;
+
+            ShipStack.Push(ship);
+
+            return true;
         }
     }
 }

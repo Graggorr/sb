@@ -16,16 +16,15 @@ namespace SB2
         public const string TRIPLEKEY = "TRIPLE";
         public const string DOUBLEKEY = "DOUBLE";
         public const string SINGLEKEY = "SINGLE";
+
         public static int NumberOfSet = 0;
-        public bool FoundShip { get; set; }
 
         public List<Ship> SingleRankShips { get; private set; }
         public List<Ship> DoubleRankShips { get; private set; }
         public List<Ship> TripleRankShips { get; private set; }
         public List<Ship> QuadroRankShips { get; private set; }
-        public List<string> Keys { get; private set; }
         public Dictionary<string, List<Ship>> Warships { get; private set; }
-        public Stack<Ship> ShipStack { get; set; }
+        public Stack<Ship> ShipStack { get; private set; }
 
         public Player()
         {
@@ -39,8 +38,6 @@ namespace SB2
             DoubleRankShips = new List<Ship> { new Ship(2), new Ship(2), new Ship(2) };
             TripleRankShips = new List<Ship> { new Ship(3), new Ship(3) };
             QuadroRankShips = new List<Ship> { new Ship(4) };
-
-            Keys = new List<string> { SINGLEKEY, DOUBLEKEY, TRIPLEKEY, QUADROKEY };
 
             Warships = new Dictionary<string, List<Ship>>
             {
@@ -60,11 +57,9 @@ namespace SB2
                 if (ship.installed == false)
                 {
                     Stack(ship, cell, player, CellStatus.HasShip);
-                    goto LoopEnd;
+                    return;
                 }
             }
-        LoopEnd:
-            return;
         }
 
         public void RemoveShips(Ship ship)
@@ -82,33 +77,13 @@ namespace SB2
         {
             field.BlockCells(cell, ship, shipStatus, CellStatus.Blocked, player);
 
-            ship.installed = true;
             NumberOfSet++;
+
+            ship.installed = true;
             ship.NumberOfSet = NumberOfSet;
-            
+
             ShipStack.Push(ship);
-        }
 
-        public void Strike(Cell clickedcell)
-        {
-            if (clickedcell.Status == CellStatus.EmptyStriked || clickedcell.Status == CellStatus.ShipDamaged 
-                ||!yourTurn)
-            {
-                return;
-            }
-
-            if (clickedcell.Status == CellStatus.Empty)
-            {
-                clickedcell.Status = CellStatus.EmptyStriked;
-                clickedcell.BackColor = Color.Black;
-            }
-            if (clickedcell.Status == CellStatus.HasShip)
-            {
-                clickedcell.Status = CellStatus.ShipDamaged;
-                clickedcell.BackColor = Color.Red;
-                CheckShips();
-            }
-            yourTurn = false;
         }
 
         public void CheckShips()
@@ -117,40 +92,29 @@ namespace SB2
             {
                 for (int j = 0; j < 10; j++)
                 {
-                    if (field.map[i, j].Status == CellStatus.HasShip)
+                    if (field.map[i, j].Status == CellStatus.HasShip || field.map[i,j].Status == CellStatus.HasShipHidden)
                     {
-                        goto LoopEnd;
-                    }
-                    else
-                    {
-                        Lost();
+                        return;
                     }
                 }
             }
-        LoopEnd:
-            return;
+            Lost();
         }
 
         public bool DeadShip(Cell cell)
         {
-            if (cell.NumberOfSet == 0)
+            for (int i = 0; i < 10; i++)
             {
-                return true;
-            }
-            else
-            {
-                for (int i = 0; i < 10; i++)
+                for (int j = 0; j < 10; j++)
                 {
-                    for (int j = 0; j < 10; j++)
+                    if (field.map[i, j].NumberOfSet == cell.NumberOfSet && (field.map[i, j].Status == CellStatus.HasShip || field.map[i, j].Status == CellStatus.HasShipHidden))
                     {
-                        if (field.map[i, j].NumberOfSet == cell.NumberOfSet && (field.map[i, j].Status == CellStatus.HasShip || field.map[i, j].Status == CellStatus.HasShipHidden))
-                        {
-                            return true;
-                        }
+                        return false;
                     }
                 }
             }
-            return false;
+
+            return true;
         }
 
         private void Lost()
@@ -160,7 +124,7 @@ namespace SB2
                 "Message",
                 MessageBoxButtons.OK);
             if (result == DialogResult.OK)
-            {Application.Exit();}
+            { Application.Exit(); }
         }
     }
 }

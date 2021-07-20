@@ -20,7 +20,7 @@ namespace SB2
         public void ClearCell()
         {
             Status = CellStatus.Empty;
-            NumberOfSet = 0;
+            NumberOfSet = -1;
         }
     }
     public enum CellStatus
