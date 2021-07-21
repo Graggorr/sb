@@ -11,7 +11,7 @@ namespace SB2
     public class Player
     {
         public Field field;
-        public bool yourTurn = true;
+        public bool yourTurn;
         public const string QUADROKEY = "QUADRO";
         public const string TRIPLEKEY = "TRIPLE";
         public const string DOUBLEKEY = "DOUBLE";
@@ -47,16 +47,18 @@ namespace SB2
                 { QUADROKEY, QuadroRankShips }
             };
 
+            yourTurn = true;
+
             ShipStack = new Stack<Ship>();
         }
 
-        public void SetShips(string Key, Cell cell, bool player)
+        public void SetShips(string Key, Cell cell)
         {
             foreach (var ship in Warships[Key])
             {
-                if (ship.installed == false)
+                if (!ship.installed && field.CheckShipCell(cell, ship))
                 {
-                    Stack(ship, cell, player, CellStatus.HasShip);
+                    Stack(ship, cell, true, CellStatus.HasShip);
                     return;
                 }
             }
@@ -75,12 +77,13 @@ namespace SB2
 
         public void Stack(Ship ship, Cell cell, bool player, CellStatus shipStatus)
         {
-            field.BlockCells(cell, ship, shipStatus, CellStatus.Blocked, player);
-
             NumberOfSet++;
 
-            ship.installed = true;
             ship.NumberOfSet = NumberOfSet;
+            ship.installed = true;
+
+            field.BlockCells(cell, ship, shipStatus, CellStatus.Blocked, player);
+
 
             ShipStack.Push(ship);
 
@@ -92,7 +95,7 @@ namespace SB2
             {
                 for (int j = 0; j < 10; j++)
                 {
-                    if (field.map[i, j].Status == CellStatus.HasShip || field.map[i,j].Status == CellStatus.HasShipHidden)
+                    if (field.map[i, j].Status == CellStatus.HasShip || field.map[i, j].Status == CellStatus.HasShipHidden)
                     {
                         return;
                     }
@@ -124,7 +127,9 @@ namespace SB2
                 "Message",
                 MessageBoxButtons.OK);
             if (result == DialogResult.OK)
-            { Application.Exit(); }
+            {
+                Application.Exit();
+            }
         }
     }
 }

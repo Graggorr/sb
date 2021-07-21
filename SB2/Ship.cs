@@ -30,10 +30,5 @@ namespace SB2
             }
             NumberOfSet = 0;
         }
-
-        public virtual void BlockCells(Field field)
-        {
-
-        }
     }
 }

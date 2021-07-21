@@ -99,7 +99,7 @@ namespace SB2
         {
             for(int i = 0; i < 10; i++)
             {
-                for(int j = 10; j < 10; j++)
+                for(int j = 0; j < 10; j++)
                 {
                     if(cell.Coordinates.X == map[i,j].Coordinates.X && cell.Coordinates.Y == map[i, j].Coordinates.Y && CheckCell(j, i))
                     {

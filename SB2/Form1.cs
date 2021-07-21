@@ -97,45 +97,7 @@ namespace SB2
 
         private void BotStrike()
         {
-            Random rng = new Random();
-            if (bot.yourTurn == true)
-            {
-                int x, y, x1;
-            LoopEnd:
-                x = rng.Next(0, 9);
-                y = rng.Next(0, 9);
-                x1 = x + 1;
-                if (player.field.map[y, x].Status != CellStatus.EmptyStriked && player.field.map[y, x].Status != CellStatus.ShipDamaged)
-                {
-                    if (player.field.map[y, x].Status == CellStatus.HasShip)
-                    {
-                        player.field.ChangeColor(player.field.map[y, x], CellStatus.ShipDamaged, Color.Red);
-                    RepeatShot:
-                        if (!bot.DeadShip(player.field.map[y, x]) && player.field.CheckCell(x1, y) && player.field.map[y, x].Status == CellStatus.HasShip)
-                        {
-                            player.field.ChangeColor(player.field.map[y, x1], CellStatus.ShipDamaged, Color.Red);
-                            x++;
-                            x1++;
-                            goto RepeatShot;
-                        }
-                        else
-                        {
-                            player.field.ChangeColor(player.field.map[y, x1], CellStatus.EmptyStriked, Color.Black);
-                            bot.yourTurn = false;
-                            player.yourTurn = true; 
-                        }
-                    }
-                    else
-                    {
-                        player.field.ChangeColor(player.field.map[y, x], CellStatus.EmptyStriked, Color.Black);
-                        bot.yourTurn = false;
-                        player.yourTurn = true;
-                    }
-                    player.CheckShips();
-                    return;
-                }
-                goto LoopEnd;
-            }
+            bot.Strike(player);
         }
 
         private void PlayerStrike(object sender, EventArgs e)
@@ -151,20 +113,18 @@ namespace SB2
 
                         player.yourTurn = false;
                         bot.yourTurn = true;
-
                         BotStrike();
                     }
                     if (clickedcell.Status == CellStatus.HasShipHidden)
                     {
                         bot.field.ChangeColor(clickedcell, CellStatus.ShipDamaged, Color.Red);
 
-                        if (!bot.DeadShip(clickedcell))
+                        if (bot.DeadShip(clickedcell))
                         {
                             MessageBox.Show("Ship is dead");
                             bot.field.BlockDeadShipCell(clickedcell);
                         }
                     }
-
                     bot.CheckShips();
                 }
                 return;
@@ -176,19 +136,19 @@ namespace SB2
             Cell clickedCell = sender as Cell;
             if (SingleRankButton.Checked == true)
             {
-                player.SetShips(Player.SINGLEKEY, clickedCell, true);
+                player.SetShips(Player.SINGLEKEY, clickedCell);
             }
             if (DoubleRankButton.Checked == true)
             {
-                player.SetShips(Player.DOUBLEKEY, clickedCell, true);
+                player.SetShips(Player.DOUBLEKEY, clickedCell);
             }
             if (TripleRankButton.Checked == true)
             {
-                player.SetShips(Player.TRIPLEKEY, clickedCell, true);
+                player.SetShips(Player.TRIPLEKEY, clickedCell);
             }
             if (QuadroRankButton.Checked == true)
             {
-                player.SetShips(Player.QUADROKEY, clickedCell, true);
+                player.SetShips(Player.QUADROKEY, clickedCell);
             }
         }
 
