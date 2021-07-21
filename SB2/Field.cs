@@ -153,8 +153,6 @@ namespace SB2
                     if (cell.Coordinates.X == map[i, j].Coordinates.X && cell.Coordinates.Y == map[i, j].Coordinates.Y &&
                         CheckCell(j, i))
                     {
-
-
                         switch (ship.LargeOfShip)
                         {
                             case 1:
