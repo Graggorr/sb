@@ -17,12 +17,11 @@ namespace SB2
         public Form1()
         {
             InitializeComponent();
-            CreateMap();
+            CreateGame();
         }
 
-        private void CreateGame(object sender, EventArgs e)
+        private void CreateGame()
         {
-            Button clickedbutton = sender as Button;
             player = new Player();
             bot = new Bot();
             SetBotShips();
@@ -40,12 +39,6 @@ namespace SB2
             TripleRankButton.Visible = true;
             QuadroRankButton.Visible = true;
             RemoveShipButton.Visible = true;
-            clickedbutton.Click -= new EventHandler(CreateGame);
-            clickedbutton.Click += new EventHandler(StartGame);
-
-        }
-        private void CreateMap()
-        {
             Button startButton = new Button
             {
                 Text = "Start",
@@ -53,36 +46,38 @@ namespace SB2
                 Location = new Point(650, 650)
             };
             Controls.Add(startButton);
-            startButton.Click += new EventHandler(CreateGame);
+            startButton.Click += new EventHandler(StartGame);
+
         }
         private void StartGame(Object sender, EventArgs e)
         {
-            Button clickedButton = sender as Button;
-            if (Player.NumberOfSet == 20)
+            if (player.Count == 10)
             {
-                for (int i = 0; i < 10; i++)
+                Button clickedButton = sender as Button;
                 {
-                    for (int j = 0; j < 10; j++)
+                    for (int i = 0; i < 10; i++)
                     {
-                        player.field.map[i, j].Click -= new EventHandler(SetPlayerShips);
-                        player.field.BattleColors(player.field.map[i, j]);
-                        bot.field.BattleColors(bot.field.map[i, j]);
+                        for (int j = 0; j < 10; j++)
+                        {
+                            player.field.map[i, j].Click -= new EventHandler(SetPlayerShips);
+                            player.field.BattleColors(player.field.map[i, j]);
+                            bot.field.BattleColors(bot.field.map[i, j]);
+                        }
                     }
+                    Controls.Remove(clickedButton);
+                    Controls.Remove(SingleRankButton);
+                    Controls.Remove(DoubleRankButton);
+                    Controls.Remove(TripleRankButton);
+                    Controls.Remove(QuadroRankButton);
+                    Controls.Remove(RemoveShipButton);
+                    War();
                 }
-                Controls.Remove(clickedButton);
-                Controls.Remove(SingleRankButton);
-                Controls.Remove(DoubleRankButton);
-                Controls.Remove(TripleRankButton);
-                Controls.Remove(QuadroRankButton);
-                Controls.Remove(RemoveShipButton);
-                War();
             }
             else
             {
                 MessageBox.Show("There are no 10 ships");
             }
         }
-
         private void War()
         {
             for (int i = 0; i < 10; i++)
@@ -92,42 +87,17 @@ namespace SB2
                     bot.field.map[i, j].Click += new EventHandler(PlayerStrike);
                 }
             }
-            BotStrike();
         }
 
-        private void BotStrike()
+        private void SetBotShips()
         {
-            bot.Strike(player);
-        }
-
-        private void PlayerStrike(object sender, EventArgs e)
-        {
-            Cell clickedcell = sender as Cell;
-            if (player.yourTurn == true)
+            int x, y;
+            Random rng = new Random();
+            while (bot.Count != 10)
             {
-                if (clickedcell.Status != CellStatus.EmptyStriked && clickedcell.Status != CellStatus.ShipDamaged)
-                {
-                    if (clickedcell.Status == CellStatus.Empty)
-                    {
-                        bot.field.ChangeColor(clickedcell, CellStatus.EmptyStriked, Color.Black);
-
-                        player.yourTurn = false;
-                        bot.yourTurn = true;
-                        BotStrike();
-                    }
-                    if (clickedcell.Status == CellStatus.HasShipHidden)
-                    {
-                        bot.field.ChangeColor(clickedcell, CellStatus.ShipDamaged, Color.Red);
-
-                        if (bot.DeadShip(clickedcell))
-                        {
-                            MessageBox.Show("Ship is dead");
-                            bot.field.BlockDeadShipCell(clickedcell);
-                        }
-                    }
-                    bot.CheckShips();
-                }
-                return;
+                x = rng.Next(0, 9);
+                y = rng.Next(0, 9);
+                bot.SetShips(bot.field.map[y, x]);
             }
         }
 
@@ -152,25 +122,43 @@ namespace SB2
             }
         }
 
-        private void SetBotShips()
-        {
-            int x, y;
-            Random rng = new Random();
-            while (bot.Count != 10)
-            {
-                x = rng.Next(0, 9);
-                y = rng.Next(0, 9);
-                bot.SetShips(bot.field.map[y, x]);
-            }
-        }
-
-
         private void RemoveShipButton_Click(object sender, EventArgs e)
         {
             foreach (var ship in player.ShipStack)
             {
                 player.RemoveShips(ship);
+                player.BlockCellsAfterRemove();
                 break;
+            }
+        }
+
+        private void PlayerStrike(object sender, EventArgs e)
+        {
+            Cell clickedcell = sender as Cell;
+            if (player.yourTurn == true)
+            {
+                if (clickedcell.Status != CellStatus.EmptyStriked && clickedcell.Status != CellStatus.ShipDamaged)
+                {
+                    if (clickedcell.Status == CellStatus.Empty)
+                    {
+                        bot.field.ChangeColor(clickedcell, CellStatus.EmptyStriked, Color.Black);
+
+                        player.yourTurn = false;
+                        bot.yourTurn = true;
+                        bot.Strike(player);
+                    }
+                    if (clickedcell.Status == CellStatus.HasShipHidden)
+                    {
+                        bot.field.ChangeColor(clickedcell, CellStatus.ShipDamaged, Color.Red);
+
+                        if (bot.DeadShip(clickedcell))
+                        {
+                            MessageBox.Show("Ship is dead");
+                        }
+                    }
+                    bot.CheckShips();
+                }
+                return;
             }
         }
     }

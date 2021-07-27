@@ -36,22 +36,115 @@ namespace SB2
             }
         }
 
-        public bool CheckCell(int x, int y)
+        private bool CheckCoordinates(int x, int y)
         {
             if (x > 9 || x < 0 || y > 9 || y < 0)
             {
                 return false;
             }
-            else
+            return true;
+        }
+
+        private bool CheckCell(int x, int y)
+        {
+            if (!CheckCoordinates(x, y))
+                return false;
+
+            if (map[y, x].Status != CellStatus.Empty)
             {
-                if (map[y, x].Status != CellStatus.Empty)
+                return false;
+            }
+            return true;
+        }
+
+        public void BlockCells(Cell cell, Ship ship, bool player)
+        {
+            int x = cell.Coordinates.X;
+            int y = cell.Coordinates.Y;
+            if (CheckCell(x, y))
+            {
+                switch (ship.LargeOfShip)
                 {
-                    return false;
+                    case 1:
+                        ship.SetCoordinates(this, 0, x, y, player);
+                        ship.BlockCells(this);
+                        break;
+                    case 2:
+                        if (CheckCell(x + 1, y))
+                        {
+                            ship.SetCoordinates(this, 0, x, y, player);
+                            ship.SetCoordinates(this, 1, x + 1, y, player);
+                            ship.BlockCells(this);
+                            return;
+                        }
+                        if (CheckCell(x - 1, y))
+                        {
+                            ship.SetCoordinates(this, 0, x, y, player);
+                            ship.SetCoordinates(this, 1, x - 1, y, player);
+                            ship.BlockCells(this);
+                        }
+                        break;
+                    case 3:
+                        if (CheckCell(x + 1, y) && CheckCell(x + 2, y))
+                        {
+                            ship.SetCoordinates(this, 0, x, y, player);
+                            ship.SetCoordinates(this, 1, x + 1, y, player);
+                            ship.SetCoordinates(this, 2, x + 2, y, player);
+                            ship.BlockCells(this);
+                            return;
+                        }
+                        if (CheckCell(x - 1, y) && CheckCell(x - 2, y))
+                        {
+                            ship.SetCoordinates(this, 0, x, y, player);
+                            ship.SetCoordinates(this, 1, x - 1, y, player);
+                            ship.SetCoordinates(this, 2, x - 2, y, player);
+                            ship.BlockCells(this);
+                        }
+                        break;
+                    case 4:
+                        if (CheckCell(x + 1, y) && CheckCell(x + 2, y) && CheckCell(x + 3, y))
+                        {
+                            ship.SetCoordinates(this, 0, x, y, player);
+                            ship.SetCoordinates(this, 1, x + 1, y, player);
+                            ship.SetCoordinates(this, 2, x + 2, y, player);
+                            ship.SetCoordinates(this, 3, x + 3, y, player);
+                            ship.BlockCells(this);
+                            return;
+                        }
+                        if (CheckCell(x - 1, y) && CheckCell(x - 2, y) && CheckCell(x - 3, y))
+                        {
+                            ship.SetCoordinates(this, 0, x, y, player);
+                            ship.SetCoordinates(this, 1, x - 1, y, player);
+                            ship.SetCoordinates(this, 2, x - 2, y, player);
+                            ship.SetCoordinates(this, 3, x - 3, y, player);
+                            ship.BlockCells(this);
+                            return;
+                        }
+                        break;
                 }
-                else
-                {
-                    return true;
-                }
+            }
+        }
+        public void BlockShipCell(int x, int y)
+        {
+            if (!CheckCoordinates(x, y))
+                return;
+
+            if (map[y, x].Status == CellStatus.Empty)
+            {
+                map[y, x].Status = CellStatus.Blocked;
+                map[y, x].BackColor = Color.Black;
+            }
+        }
+
+        public void UnblockDeletedShipCell(int x, int y)
+        {
+            if (!CheckCoordinates(x, y))
+                return;
+
+            if (map[y, x].Status == CellStatus.HasShip || map[y, x].Status == CellStatus.Blocked)
+            {
+                map[y, x].Status = CellStatus.Empty;
+                map[y, x].BackColor = Button.DefaultBackColor;
             }
         }
 
@@ -61,30 +154,19 @@ namespace SB2
             cell.BackColor = color;
         }
 
-        public void ChangeStatus(int x, int y, CellStatus status, int numberOfSet, bool player)
+        public void CellHasShip(int x, int y)
         {
-            if (x > 9 || x < 0 || y > 9 || y < 0)
-            {
+            if (!CheckCell(x, y))
                 return;
-            }
-
-            map[y, x].NumberOfSet = numberOfSet;
-            map[y, x].Status = status;
-            ChangeColor(x, y, player);
+            map[y, x].Status = CellStatus.HasShip;
+            map[y, x].BackColor = Color.Blue;
         }
-
-        void ChangeColor(int x, int y, bool player)
+        public void CellHasShipHidden(int x, int y)
         {
-            //if (player == true)
-            //{
-            map[y, x].BackColor = map[y, x].Status switch
-            {
-                CellStatus.HasShip => Color.Blue,
-                CellStatus.Blocked => Color.Black,
-                CellStatus.HasShipHidden => Color.Green,
-                _ => Color.LightGray
-            };
-            //}
+            if (!CheckCell(x, y))
+                return;
+            map[y, x].Status = CellStatus.HasShipHidden;
+            map[y, x].BackColor = Color.Green;
         }
         public void BattleColors(Cell cell)
         {
@@ -97,254 +179,55 @@ namespace SB2
 
         public bool CheckShipCell(Cell cell, Ship ship)
         {
-            for(int i = 0; i < 10; i++)
+            int x = cell.Coordinates.X;
+            int y = cell.Coordinates.Y;
+            if (CheckCell(x, y))
             {
-                for(int j = 0; j < 10; j++)
+                switch (ship.LargeOfShip)
                 {
-                    if(cell.Coordinates.X == map[i,j].Coordinates.X && cell.Coordinates.Y == map[i, j].Coordinates.Y && CheckCell(j, i))
-                    {
-                        switch (ship.LargeOfShip)
+                    case 1:
+                        return true;
+                    case 2:
+                        if (CheckCell(x + 1, y))
                         {
-                            case 1:
-                                return true;
-                            case 2:
-                                if (CheckCell(j + 1, i))
-                                {
-                                    return true;
-                                }
-                                if (CheckCell(j - 1, i))
-                                {
-                                    return true;
-                                }
-                                return false;
-                            case 3:
-                                if (CheckCell(j + 1, i) && CheckCell(j + 2, i))
-                                {
-                                    return true;
-                                }
-                                if (CheckCell(j - 1, i) && CheckCell(j - 2, i))
-                                {
-                                    return true;
-                                }
-                                return false;
-                            case 4:
-                                if (CheckCell(j + 1, i) && CheckCell(j + 2, i) && CheckCell(j + 3, i))
-                                {
-                                    return true;
-                                }
-                                if (CheckCell(j - 1, i) && CheckCell(j - 2, i) && CheckCell(j - 3, i))
-                                {
-                                    return true;
-                                }
-                                    return false;
+                            return true;
                         }
-                    }
+                        if (CheckCell(x - 1, y))
+                        {
+                            return true;
+                        }
+                        return false;
+                    case 3:
+                        if (CheckCell(x + 1, y) && CheckCell(x + 2, y))
+                        {
+                            return true;
+                        }
+                        if (CheckCell(x - 1, y) && CheckCell(x - 2, y))
+                        {
+                            return true;
+                        }
+                        return false;
+                    case 4:
+                        if (CheckCell(x + 1, y) && CheckCell(x + 2, y) && CheckCell(x + 3, y))
+                        {
+                            return true;
+                        }
+                        if (CheckCell(x - 1, y) && CheckCell(x - 2, y) && CheckCell(x - 3, y))
+                        {
+                            return true;
+                        }
+                        return false;
                 }
             }
             return false;
         }
-
-        public void BlockCells(Cell cell, Ship ship, CellStatus shipStatus, CellStatus cellStatus, bool player)
+        public bool CheckCellForShoot(Cell cell)
         {
-            for (int i = 0; i < 10; i++)
-            {
-                for (int j = 0; j < 10; j++)
-                {
-                    if (cell.Coordinates.X == map[i, j].Coordinates.X && cell.Coordinates.Y == map[i, j].Coordinates.Y &&
-                        CheckCell(j, i))
-                    {
-                        switch (ship.LargeOfShip)
-                        {
-                            case 1:
-                                ChangeStatus(j, i, shipStatus, ship.NumberOfSet, player);
-                                ChangeStatus(j + 1, i, cellStatus, ship.NumberOfSet, player);
-                                ChangeStatus(j + 1, i + 1, cellStatus, ship.NumberOfSet, player);
-                                ChangeStatus(j, i + 1, cellStatus, ship.NumberOfSet, player);
-                                ChangeStatus(j - 1, i + 1, cellStatus, ship.NumberOfSet, player);
-                                ChangeStatus(j - 1, i, cellStatus, ship.NumberOfSet, player);
-                                ChangeStatus(j - 1, i - 1, cellStatus, ship.NumberOfSet, player);
-                                ChangeStatus(j, i - 1, cellStatus, ship.NumberOfSet, player);
-                                ChangeStatus(j + 1, i - 1, cellStatus, ship.NumberOfSet, player);
-                                ship.Coordinates[0] = new Coordinates(j, i);
-                                return;
-                            case 2:
-                                if (CheckCell(j + 1, i))
-                                {
-                                    ChangeStatus(j, i, shipStatus, ship.NumberOfSet, player);
-                                    ChangeStatus(j + 1, i, shipStatus, ship.NumberOfSet, player);
-                                    ChangeStatus(j + 2, i, cellStatus, ship.NumberOfSet, player);
-                                    ChangeStatus(j + 2, i + 1, cellStatus, ship.NumberOfSet, player);
-                                    ChangeStatus(j + 1, i + 1, cellStatus, ship.NumberOfSet, player);
-                                    ChangeStatus(j, i + 1, cellStatus, ship.NumberOfSet, player);
-                                    ChangeStatus(j - 1, i + 1, cellStatus, ship.NumberOfSet, player);
-                                    ChangeStatus(j - 1, i, cellStatus, ship.NumberOfSet, player);
-                                    ChangeStatus(j - 1, i - 1, cellStatus, ship.NumberOfSet, player);
-                                    ChangeStatus(j, i - 1, cellStatus, ship.NumberOfSet, player);
-                                    ChangeStatus(j + 1, i - 1, cellStatus, ship.NumberOfSet, player);
-                                    ChangeStatus(j + 2, i - 1, cellStatus, ship.NumberOfSet, player);
-                                    ship.Coordinates[0] = new Coordinates(j, i);
-                                    ship.Coordinates[1] = new Coordinates(j + 1, i);
-                                    return;
-                                }
-                                else
-                                {
-                                    if (CheckCell(j - 1, i))
-                                    {
-                                        ChangeStatus(j, i, shipStatus, ship.NumberOfSet, player);
-                                        ChangeStatus(j - 1, i, shipStatus, ship.NumberOfSet, player);
-                                        ChangeStatus(j - 2, i, cellStatus, ship.NumberOfSet, player);
-                                        ChangeStatus(j - 2, i + 1, cellStatus, ship.NumberOfSet, player);
-                                        ChangeStatus(j - 1, i + 1, cellStatus, ship.NumberOfSet, player);
-                                        ChangeStatus(j, i + 1, cellStatus, ship.NumberOfSet, player);
-                                        ChangeStatus(j + 1, i + 1, cellStatus, ship.NumberOfSet, player);
-                                        ChangeStatus(j + 1, i, cellStatus, ship.NumberOfSet, player);
-                                        ChangeStatus(j + 1, i - 1, cellStatus, ship.NumberOfSet, player);
-                                        ChangeStatus(j, i - 1, cellStatus, ship.NumberOfSet, player);
-                                        ChangeStatus(j - 1, i - 1, cellStatus, ship.NumberOfSet, player);
-                                        ChangeStatus(j - 2, i - 1, cellStatus, ship.NumberOfSet, player);
-                                        ship.Coordinates[0] = new Coordinates(j, i);
-                                        ship.Coordinates[1] = new Coordinates(j - 1, i);
-                                    }
-                                }
-                                return;
-                            case 3:
-                                if (CheckCell(j + 1, i) && CheckCell(j + 2, i))
-                                {
-                                    ChangeStatus(j, i, shipStatus, ship.NumberOfSet, player);
-                                    ChangeStatus(j + 1, i, shipStatus, ship.NumberOfSet, player);
-                                    ChangeStatus(j + 2, i, shipStatus, ship.NumberOfSet, player);
-                                    ChangeStatus(j + 3, i, cellStatus, ship.NumberOfSet, player);
-                                    ChangeStatus(j + 3, i + 1, cellStatus, ship.NumberOfSet, player);
-                                    ChangeStatus(j + 2, i + 1, cellStatus, ship.NumberOfSet, player);
-                                    ChangeStatus(j + 1, i + 1, cellStatus, ship.NumberOfSet, player);
-                                    ChangeStatus(j, i + 1, cellStatus, ship.NumberOfSet, player);
-                                    ChangeStatus(j - 1, i + 1, cellStatus, ship.NumberOfSet, player);
-                                    ChangeStatus(j - 1, i, cellStatus, ship.NumberOfSet, player);
-                                    ChangeStatus(j - 1, i - 1, cellStatus, ship.NumberOfSet, player);
-                                    ChangeStatus(j, i - 1, cellStatus, ship.NumberOfSet, player);
-                                    ChangeStatus(j + 1, i - 1, cellStatus, ship.NumberOfSet, player);
-                                    ChangeStatus(j + 2, i - 1, cellStatus, ship.NumberOfSet, player);
-                                    ChangeStatus(j + 3, i - 1, cellStatus, ship.NumberOfSet, player);
-                                    ship.Coordinates[0] = new Coordinates(j, i);
-                                    ship.Coordinates[1] = new Coordinates(j, i + 1);
-                                    ship.Coordinates[2] = new Coordinates(j, i + 2);
-                                    return;
-                                }
-                                else
-                                {
-                                    if (CheckCell(j - 1, i) && CheckCell(j - 2, i))
-                                    {
-                                        ChangeStatus(j, i, shipStatus, ship.NumberOfSet, player);
-                                        ChangeStatus(j - 1, i, shipStatus, ship.NumberOfSet, player);
-                                        ChangeStatus(j - 2, i, shipStatus, ship.NumberOfSet, player);
-                                        ChangeStatus(j - 3, i, cellStatus, ship.NumberOfSet, player);
-                                        ChangeStatus(j - 3, i + 1, cellStatus, ship.NumberOfSet, player);
-                                        ChangeStatus(j - 2, i + 1, cellStatus, ship.NumberOfSet, player);
-                                        ChangeStatus(j - 1, i + 1, cellStatus, ship.NumberOfSet, player);
-                                        ChangeStatus(j, i + 1, cellStatus, ship.NumberOfSet, player);
-                                        ChangeStatus(j + 1, i + 1, cellStatus, ship.NumberOfSet, player);
-                                        ChangeStatus(j + 1, i, cellStatus, ship.NumberOfSet, player);
-                                        ChangeStatus(j + 1, i - 1, cellStatus, ship.NumberOfSet, player);
-                                        ChangeStatus(j, i - 1, cellStatus, ship.NumberOfSet, player);
-                                        ChangeStatus(j - 1, i - 1, cellStatus, ship.NumberOfSet, player);
-                                        ChangeStatus(j - 2, i - 1, cellStatus, ship.NumberOfSet, player);
-                                        ChangeStatus(j - 3, i - 1, cellStatus, ship.NumberOfSet, player);
-                                        ship.Coordinates[0] = new Coordinates(j, i);
-                                        ship.Coordinates[1] = new Coordinates(j, i - 1);
-                                        ship.Coordinates[2] = new Coordinates(j, i - 2);
-                                    }
-                                }
-                                return;
-                            case 4:
-                                if (CheckCell(j + 1, i) && CheckCell(j + 2, i) && CheckCell(j + 3, i))
-                                {
-                                    ChangeStatus(j, i, shipStatus, ship.NumberOfSet, player);
-                                    ChangeStatus(j + 1, i, shipStatus, ship.NumberOfSet, player);
-                                    ChangeStatus(j + 2, i, shipStatus, ship.NumberOfSet, player);
-                                    ChangeStatus(j + 3, i, shipStatus, ship.NumberOfSet, player);
-                                    ChangeStatus(j + 4, i, cellStatus, ship.NumberOfSet, player);
-                                    ChangeStatus(j + 4, i + 1, cellStatus, ship.NumberOfSet, player);
-                                    ChangeStatus(j + 3, i + 1, cellStatus, ship.NumberOfSet, player);
-                                    ChangeStatus(j + 2, i + 1, cellStatus, ship.NumberOfSet, player);
-                                    ChangeStatus(j + 1, i + 1, cellStatus, ship.NumberOfSet, player);
-                                    ChangeStatus(j, i + 1, cellStatus, ship.NumberOfSet, player);
-                                    ChangeStatus(j - 1, i + 1, cellStatus, ship.NumberOfSet, player);
-                                    ChangeStatus(j - 1, i, cellStatus, ship.NumberOfSet, player);
-                                    ChangeStatus(j - 1, i - 1, cellStatus, ship.NumberOfSet, player);
-                                    ChangeStatus(j, i - 1, cellStatus, ship.NumberOfSet, player);
-                                    ChangeStatus(j + 1, i - 1, cellStatus, ship.NumberOfSet, player);
-                                    ChangeStatus(j + 2, i - 1, cellStatus, ship.NumberOfSet, player);
-                                    ChangeStatus(j + 3, i - 1, cellStatus, ship.NumberOfSet, player);
-                                    ChangeStatus(j + 4, i - 1, cellStatus, ship.NumberOfSet, player);
-                                    ship.Coordinates[0] = new Coordinates(j, i);
-                                    ship.Coordinates[1] = new Coordinates(j, i + 1);
-                                    ship.Coordinates[2] = new Coordinates(j, i + 2);
-                                    ship.Coordinates[3] = new Coordinates(j, i + 3);
-                                    return;
-                                }
-
-                                else
-                                {
-                                    if (CheckCell(j - 1, i) && CheckCell(j - 2, i) && CheckCell(j - 3, i))
-                                    {
-                                        ChangeStatus(j, i, shipStatus, ship.NumberOfSet, player);
-                                        ChangeStatus(j - 1, i, shipStatus, ship.NumberOfSet, player);
-                                        ChangeStatus(j - 2, i, shipStatus, ship.NumberOfSet, player);
-                                        ChangeStatus(j - 3, i, shipStatus, ship.NumberOfSet, player);
-                                        ChangeStatus(j - 4, i, cellStatus, ship.NumberOfSet, player);
-                                        ChangeStatus(j - 4, i + 1, cellStatus, ship.NumberOfSet, player);
-                                        ChangeStatus(j - 3, i + 1, cellStatus, ship.NumberOfSet, player);
-                                        ChangeStatus(j - 2, i + 1, cellStatus, ship.NumberOfSet, player);
-                                        ChangeStatus(j - 1, i + 1, cellStatus, ship.NumberOfSet, player);
-                                        ChangeStatus(j, i + 1, cellStatus, ship.NumberOfSet, player);
-                                        ChangeStatus(j + 1, i + 1, cellStatus, ship.NumberOfSet, player);
-                                        ChangeStatus(j + 1, i, cellStatus, ship.NumberOfSet, player);
-                                        ChangeStatus(j + 1, i - 1, cellStatus, ship.NumberOfSet, player);
-                                        ChangeStatus(j, i - 1, cellStatus, ship.NumberOfSet, player);
-                                        ChangeStatus(j - 1, i - 1, cellStatus, ship.NumberOfSet, player);
-                                        ChangeStatus(j - 2, i - 1, cellStatus, ship.NumberOfSet, player);
-                                        ChangeStatus(j - 3, i - 1, cellStatus, ship.NumberOfSet, player);
-                                        ChangeStatus(j - 4, i - 1, cellStatus, ship.NumberOfSet, player);
-                                        ship.Coordinates[0] = new Coordinates(j, i);
-                                        ship.Coordinates[1] = new Coordinates(j, i - 1);
-                                        ship.Coordinates[2] = new Coordinates(j, i - 2);
-                                        ship.Coordinates[3] = new Coordinates(j, i - 3);
-                                        return;
-                                    }
-                                    return;
-                                }
-                        }
-                    }
-                }
-            }
-            return;
-        }
-        public void UnblockCells(Ship ship)
-        {
-            for (int i = 0; i < 10; i++)
-            {
-                for (int j = 0; j < 10; j++)
-                {
-                    if (map[i, j].NumberOfSet == ship.NumberOfSet)
-                    {
-                        map[i, j].ClearCell();
-                        map[i, j].BackColor = Color.LightGray;
-                    }
-                }
-            }
-        }
-        public void BlockDeadShipCell(Cell cell)
-        {
-            for (int i = 0; i < 10; i++)
-            {
-                for (int j = 0; j < 10; j++)
-                {
-                    if (cell.NumberOfSet == map[i, j].NumberOfSet && map[i,j].Status != CellStatus.ShipDamaged)
-                    {
-                        map[i, j].BackColor = Color.Black;
-                    }
-                }
-            }
+            if (!CheckCoordinates(cell.Coordinates.X, cell.Coordinates.Y))
+                return false;
+            if (cell.Status == CellStatus.EmptyStriked || cell.Status == CellStatus.ShipDamaged || cell.Status == CellStatus.Blocked)
+                return false;
+            return true;
         }
     }
 }

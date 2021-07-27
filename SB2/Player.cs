@@ -11,24 +11,26 @@ namespace SB2
     public class Player
     {
         public Field field;
-        public bool yourTurn;
+        public bool yourTurn { set; get; }
         public const string QUADROKEY = "QUADRO";
         public const string TRIPLEKEY = "TRIPLE";
         public const string DOUBLEKEY = "DOUBLE";
         public const string SINGLEKEY = "SINGLE";
-
-        public static int NumberOfSet = 0;
+        public int Count { protected set; get; }
 
         public List<Ship> SingleRankShips { get; private set; }
         public List<Ship> DoubleRankShips { get; private set; }
         public List<Ship> TripleRankShips { get; private set; }
         public List<Ship> QuadroRankShips { get; private set; }
+        public List<string> Keys { get; private set; }
         public Dictionary<string, List<Ship>> Warships { get; private set; }
         public Stack<Ship> ShipStack { get; private set; }
 
         public Player()
         {
             field = new Field(true);
+            Count = 0;
+            yourTurn = true;
             Initialize();
         }
 
@@ -47,8 +49,6 @@ namespace SB2
                 { QUADROKEY, QuadroRankShips }
             };
 
-            yourTurn = true;
-
             ShipStack = new Stack<Ship>();
         }
 
@@ -58,36 +58,50 @@ namespace SB2
             {
                 if (!ship.installed && field.CheckShipCell(cell, ship))
                 {
-                    Stack(ship, cell, true, CellStatus.HasShip);
+                    Stack(ship, cell, true);
+                    Count++;
                     return;
                 }
             }
         }
-
-        public void RemoveShips(Ship ship)
+        protected void Stack(Ship ship, Cell cell, bool player)
         {
-            NumberOfSet--;
-
-            ship = ShipStack.Pop();
-            ship.installed = false;
-
-            field.UnblockCells(ship);
-            ship.ClearCoordinates();
-        }
-
-        public void Stack(Ship ship, Cell cell, bool player, CellStatus shipStatus)
-        {
-            NumberOfSet++;
-
-            ship.NumberOfSet = NumberOfSet;
             ship.installed = true;
 
-            field.BlockCells(cell, ship, shipStatus, CellStatus.Blocked, player);
-
+            field.BlockCells(cell, ship, player);
 
             ShipStack.Push(ship);
 
         }
+
+        public void RemoveShips(Ship ship)
+        {
+            ship = ShipStack.Pop();
+            ship.installed = false;
+            ship.UnblockCells(field);
+            Count--;
+        }
+
+        public void BlockCellsAfterRemove()
+        {
+            foreach (var ship in ShipStack)
+            {
+                ship.BlockCells(field);
+            }
+        }
+        public bool DeadShip(Cell cell)
+        {
+            foreach (var warship in Warships)
+            {
+                foreach (var ship in warship.Value)
+                {
+                    if (cell.NumberOfSet == ship.NumberOfSet && ship.CheckDeadShip(field))
+                        return true;
+                }
+            }
+            return false;
+        }
+
 
         public void CheckShips()
         {
@@ -102,22 +116,6 @@ namespace SB2
                 }
             }
             Lost();
-        }
-
-        public bool DeadShip(Cell cell)
-        {
-            for (int i = 0; i < 10; i++)
-            {
-                for (int j = 0; j < 10; j++)
-                {
-                    if (field.map[i, j].NumberOfSet == cell.NumberOfSet && (field.map[i, j].Status == CellStatus.HasShip || field.map[i, j].Status == CellStatus.HasShipHidden))
-                    {
-                        return false;
-                    }
-                }
-            }
-
-            return true;
         }
 
         private void Lost()
