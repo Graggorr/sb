@@ -12,80 +12,53 @@ namespace SB2
     {
         public Coordinates[] Coordinates { get; set; }
         public int LargeOfShip { get; set; }
-        public bool installed = false;
-        public int NumberOfSet = 0;
+        public bool installed { get; set; }
 
         public Ship(int largeOfShip)
         {
             LargeOfShip = largeOfShip;
             Coordinates = new Coordinates[LargeOfShip];
+            installed = false;
         }
-        public void SetCoordinates(Field field, int i, int x, int y, bool player)
+
+        public void SetCoordinates(Field field, int x, int y, bool player, bool rightSide)
         {
-            NumberOfSet++;
+            for (var i = 0; i < LargeOfShip; i++)
+            {
                 Coordinates[i] = new Coordinates(x, y);
-                if (player)
-                {
-                    field.CellHasShip(x, y);
-                }
+                field.CellHasShip(x, y, player);
+
+                if (rightSide)
+
+                    x++;
                 else
-                {
-                    field.CellHasShipHidden(x, y);
-                }
-                field.map[y, x].NumberOfSet = NumberOfSet;
+                    x--;
+            }
         }
         private void ClearCoordinates()
         {
-            for (int i = 0; i < LargeOfShip; i++)
+            for (var i = 0; i < LargeOfShip; i++)
             {
-                Coordinates[i] = new Coordinates(0, 0);
+                Coordinates[i] = new Coordinates(-1, -1);
             }
-            NumberOfSet--;
         }
 
-        public void BlockCells(Field field)
+        public void ManageCells(Field field, bool blockCells, bool player, bool deadShip)
         {
-            for(int i = 0; i < LargeOfShip; i++)
+            for (var i = 0; i < LargeOfShip; i++)
             {
-                var x = Coordinates[i].X;
-                var y = Coordinates[i].Y;
-                field.BlockShipCell(x + 1, y);
-                field.BlockShipCell(x + 1, y + 1);
-                field.BlockShipCell(x, y + 1);
-                field.BlockShipCell(x - 1, y + 1);
-                field.BlockShipCell(x - 1, y);
-                field.BlockShipCell(x - 1, y - 1);
-                field.BlockShipCell(x, y - 1);
-                field.BlockShipCell(x + 1, y - 1);
+                field.TakeCoordinates(Coordinates[i].X, Coordinates[i].Y, blockCells, player, deadShip);
             }
+
+            if (!blockCells)
+                ClearCoordinates();
         }
-        public void UnblockCells(Field field)
+        public bool CheckDeadShip(Field field)
         {
-            for (int i = 0; i < LargeOfShip; i++)
+            for (var i = 0; i < LargeOfShip; i++)
             {
-                var x = Coordinates[i].X;
-                var y = Coordinates[i].Y;
-                field.UnblockDeletedShipCell(x, y);
-                field.UnblockDeletedShipCell(x + 1, y);
-                field.UnblockDeletedShipCell(x + 1, y + 1);
-                field.UnblockDeletedShipCell(x, y + 1);
-                field.UnblockDeletedShipCell(x - 1, y + 1);
-                field.UnblockDeletedShipCell(x - 1, y);
-                field.UnblockDeletedShipCell(x - 1, y - 1);
-                field.UnblockDeletedShipCell(x, y - 1);
-                field.UnblockDeletedShipCell(x + 1, y - 1);
-            }
-            ClearCoordinates();
-        }
-        public bool CheckDeadShip(Field field) 
-        {
-            for(int i = 0; i < 10; i++)
-            {
-                for(int j = 0; j < 10; j++)
-                {
-                    if (field.map[i, j].Status == CellStatus.HasShip && field.map[i, j].NumberOfSet == NumberOfSet)
-                        return true;
-                }
+                if (field.map[Coordinates[i].Y, Coordinates[i].X].Status == CellStatus.HasShip || field.map[Coordinates[i].Y, Coordinates[i].X].Status == CellStatus.HasShipHidden)
+                    return true;
             }
             return false;
         }

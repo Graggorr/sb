@@ -9,9 +9,10 @@ namespace SB2
 {
     public class Bot : Player
     {
-        private int ShotX;
-        private int ShotY;
-        private bool RememberedShot = false;
+        private int shotX { get; set; }
+        private int shotY { get; set; }
+        private bool rememberedShot { get; set; }
+        private bool shotIsGot { get; set; }
 
         public Bot()
         {
@@ -20,15 +21,25 @@ namespace SB2
             yourTurn = false;
             Initialize();
         }
+
         public void SetShips(Cell cell)
         {
             foreach (var warships in Warships)
             {
                 foreach (var ship in warships.Value)
                 {
-                    if (!ship.installed && field.CheckShipCell(cell, ship))
+                    if (!field.CheckShipCell(cell, ship.LargeOfShip))
+                    {
+                        return;
+                    }
+
+                    if (!ship.installed)
                     {
                         Stack(ship, cell, false);
+
+                        if (ship.installed)
+                            Count++;
+
                         return;
                     }
                 }
@@ -37,155 +48,99 @@ namespace SB2
 
         public void Strike(Player player)
         {
-            Random rng = new Random();
-
-            if (yourTurn == true)
+            if (yourTurn)
             {
-                int x = 0, y = 0, x1 = 0;
+                int x, y;
 
-                if (RememberedShot)
+                if (rememberedShot)
                 {
-                    RememberCoordinates(x, y);
-                    goto RememberedShot;
+                    x = shotX;
+                    y = shotY;
                 }
 
-            NewCoordinates:
-                x = rng.Next(0, 9);
-                y = rng.Next(0, 9);
-
-            RememberedShot:
-                x1 = x++;
-
-                if (field.CheckCellForShoot(player.field.map[y, x]))
-                {
-                    if (player.field.map[y, x].Status == CellStatus.HasShip)
-                    {
-                        field.ChangeColor(player.field.map[y, x], CellStatus.ShipDamaged, Color.Red);
-
-                        if (!DeadShip(player.field.map[y, x]) && field.CheckCellForShoot(player.field.map[y, x1]))
-                        {
-                        RepeatShot:
-
-                            field.ChangeColor(player.field.map[y, x1], CellStatus.ShipDamaged, Color.Red);
-                            x1++;
-
-                            if (!DeadShip(player.field.map[y, x]) && field.CheckCellForShoot(player.field.map[y, x1]) && player.field.map[y, x1].Status == CellStatus.HasShip)
-                            {
-                                goto RepeatShot;
-                            }
-                            else
-                            {
-
-                                if (!DeadShip(player.field.map[y, x]) && field.CheckCellForShoot(player.field.map[y, x1]) && player.field.map[y, x1].Status == CellStatus.Empty)
-                                {
-                                    field.ChangeColor(player.field.map[y, x], CellStatus.EmptyStriked, Color.Black);
-                                    ShotX = x1;
-                                    ShotY = y;
-                                    yourTurn = false;
-                                    return;
-                                }
-
-                                if(DeadShip(player.field.map[y, x]))
-                                {
-                                    goto NewCoordinates;
-                                }
-
-                                if (!field.CheckCellForShoot(player.field.map[y, x]))
-                                {
-                                    x--;
-                                    goto RepeatShot;
-                                }
-
-                            }
-                        }
-
-                        else
-                        {
-                            if (DeadShip(player.field.map[y, x]))
-                            {
-                                goto NewCoordinates;
-                            }
-                        }
-                    }
-
-                    else
-                    {
-                        field.ChangeColor(player.field.map[y, x], CellStatus.EmptyStriked, Color.Black);
-                        yourTurn = false;
-                    }
-                }
                 else
                 {
-                    goto NewCoordinates;
+                    Random rng = new Random();
+                    x = rng.Next(0, 9);
+                    y = rng.Next(0, 9);
+                }
+
+                Shoot(x, y, player);
+
+                if (shotIsGot)
+                    Strike(player);
+            }
+        }
+
+        private void Shoot(int x, int y, Player player)
+        {
+
+            if (!player.field.CheckCoordinates(x, y) || player.field.map[y, x].Status == CellStatus.Blocked || player.field.map[y, x].Status == CellStatus.EmptyStriked)
+            {
+                shotIsGot = true;
+                rememberedShot = false;
+
+                return;
+            }
+
+            if(player.field.map[y, x].Status == CellStatus.ShipDamaged && rememberedShot)
+            {
+                Shoot(x - 1, y, player);
+            }
+
+            if(player.field.map[y, x].Status == CellStatus.ShipDamaged && !rememberedShot)
+            {
+                shotIsGot = true;
+                rememberedShot = false;
+
+                return;
+            }
+
+            if (player.field.map[y, x].Status == CellStatus.HasShip)
+            {
+                field.ChangeColor(player.field.map[y, x], CellStatus.ShipDamaged, Color.Red);
+
+                shotIsGot = true;
+                KeepShooting(x, y, player);
+            }
+
+            if (player.field.map[y, x].Status == CellStatus.Empty)
+            {
+                field.ChangeColor(player.field.map[y, x], CellStatus.EmptyStriked, Color.Black);
+
+                yourTurn = false;
+                player.yourTurn = true;
+                shotIsGot = false;
+                rememberedShot = false;
+            }
+        }
+
+        private void KeepShooting(int x, int y, Player player)
+        {
+            if (!player.DeadShip(player.field.map[y, x]))
+            {
+                if (rememberedShot && player.field.CheckCoordinates(x - 1, y))
+                {
+                    Shoot(x - 1, y, player);
+                }
+
+                if (!rememberedShot && player.field.CheckCoordinates(x + 1, y))
+                {
+                    Shoot(x + 1, y, player);
+
+                    if (player.field.map[y, x + 1].Status == CellStatus.EmptyStriked)
+                        RememberCoordinates(x - 1, y);
                 }
             }
-        }
 
+            else
+                return;
+        }
         private void RememberCoordinates(int x, int y)
         {
-            if (RememberedShot)
-            {
-                x = ShotX;
-                y = ShotY;
-            }
+            shotX = x;
+            shotY = y;
+            rememberedShot = true;
         }
-
-        //public void Strike(Player player)
-        //{
-        //    Random rng = new Random();
-        //    if (yourTurn == true)
-        //    {
-        //        int x, y, x1;
-        //    LoopEnd:
-        //        x = rng.Next(0, 9);
-        //        y = rng.Next(0, 9);
-        //        x1 = x + 1;
-        //        if (player.field.map[y, x].Status != CellStatus.EmptyStriked && player.field.map[y, x].Status != CellStatus.ShipDamaged)
-        //        {
-        //            RepeatShot1:
-        //            if (player.field.map[y, x].Status == CellStatus.HasShip)
-        //            {
-        //                player.field.ChangeColor(player.field.map[y, x], CellStatus.ShipDamaged, Color.Red);
-        //            RepeatShot2:
-        //                if (DeadShip(player.field.map[y, x]))
-        //                {
-        //                    player.CheckShips();
-        //                    goto LoopEnd;
-        //                }
-        //                if (player.field.CheckCell(x1,y) && player.field.map[y, x1].Status == CellStatus.HasShip)
-        //                {
-        //                    player.field.ChangeColor(player.field.map[y, x1], CellStatus.ShipDamaged, Color.Red);
-        //                    x = x1;
-        //                    x1++;
-        //                    goto RepeatShot2;
-        //                }
-        //                else
-        //                {
-        //                    if (!player.field.CheckCell(x1, y))
-        //                    {
-        //                        x--;
-        //                        goto RepeatShot1;
-        //                    }
-        //                    if(player.field.map[y, x1].Status != CellStatus.HasShip)
-        //                    {
-        //                        player.field.ChangeColor(player.field.map[y, x1], CellStatus.EmptyStriked, Color.Black);
-        //                        yourTurn = false;
-        //                        player.yourTurn = true;
-        //                        return;
-        //                    }
-        //                }
-        //            }
-        //            else
-        //            {
-        //                player.field.ChangeColor(player.field.map[y, x], CellStatus.EmptyStriked, Color.Black);
-        //                yourTurn = false;
-        //                player.yourTurn = true;
-        //                return;
-        //            }
-        //        }
-        //        goto LoopEnd;
-        //    }
-        //}
-
     }
 }

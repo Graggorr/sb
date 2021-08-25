@@ -8,7 +8,6 @@ namespace SB2
     {
         public CellStatus Status { get; set; }
         public Coordinates Coordinates { get; set; }
-        public int NumberOfSet { get; set; }
         public Cell(int x, int y, Point location, Size size)
         {
             Coordinates = new Coordinates(x, y);

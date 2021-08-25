@@ -11,20 +11,22 @@ namespace SB2
     public class Player
     {
         public Field field;
-        public bool yourTurn { set; get; }
+
         public const string QUADROKEY = "QUADRO";
         public const string TRIPLEKEY = "TRIPLE";
         public const string DOUBLEKEY = "DOUBLE";
         public const string SINGLEKEY = "SINGLE";
-        public int Count { protected set; get; }
+
+        public bool yourTurn { get; set; }
+        public int Count { get; protected set; }
 
         public List<Ship> SingleRankShips { get; private set; }
         public List<Ship> DoubleRankShips { get; private set; }
         public List<Ship> TripleRankShips { get; private set; }
         public List<Ship> QuadroRankShips { get; private set; }
-        public List<string> Keys { get; private set; }
         public Dictionary<string, List<Ship>> Warships { get; private set; }
         public Stack<Ship> ShipStack { get; private set; }
+        public List<string> Keys { get; private set; }
 
         public Player()
         {
@@ -41,6 +43,8 @@ namespace SB2
             TripleRankShips = new List<Ship> { new Ship(3), new Ship(3) };
             QuadroRankShips = new List<Ship> { new Ship(4) };
 
+            Keys = new List<string> { SINGLEKEY, DOUBLEKEY, TRIPLEKEY, QUADROKEY };
+
             Warships = new Dictionary<string, List<Ship>>
             {
                 { SINGLEKEY, SingleRankShips },
@@ -56,7 +60,7 @@ namespace SB2
         {
             foreach (var ship in Warships[Key])
             {
-                if (!ship.installed && field.CheckShipCell(cell, ship))
+                if (!ship.installed && field.CheckShipCell(cell, ship.LargeOfShip))
                 {
                     Stack(ship, cell, true);
                     Count++;
@@ -67,51 +71,65 @@ namespace SB2
         protected void Stack(Ship ship, Cell cell, bool player)
         {
             ship.installed = true;
-
             field.BlockCells(cell, ship, player);
-
             ShipStack.Push(ship);
-
         }
 
         public void RemoveShips(Ship ship)
         {
             ship = ShipStack.Pop();
             ship.installed = false;
-            ship.UnblockCells(field);
+            ship.ManageCells(field, false, true, false);
+
+            BlockCellsAfterRemove();
             Count--;
         }
 
-        public void BlockCellsAfterRemove()
+        private void BlockCellsAfterRemove()
         {
             foreach (var ship in ShipStack)
             {
-                ship.BlockCells(field);
+                ship.ManageCells(field, true, true, false);
             }
         }
+
         public bool DeadShip(Cell cell)
         {
             foreach (var warship in Warships)
             {
                 foreach (var ship in warship.Value)
                 {
-                    if (cell.NumberOfSet == ship.NumberOfSet && ship.CheckDeadShip(field))
-                        return true;
+                    for (var i = 0; i < ship.LargeOfShip; i++)
+                    {
+                        if (cell.Coordinates.X == ship.Coordinates[i].X && cell.Coordinates.Y == ship.Coordinates[i].Y && !ship.CheckDeadShip(field))
+                        {
+                            MessageBox.Show("Ship is dead");
+                            ship.ManageCells(field, true, true, true);
+                            return true;
+                        }
+
+                        if (cell.Coordinates.X == ship.Coordinates[i].X && cell.Coordinates.Y == ship.Coordinates[i].Y && ship.CheckDeadShip(field))
+                        {
+                            return false;
+                        }
+                    }
                 }
             }
-            return false;
+            return true;
         }
 
 
         public void CheckShips()
         {
-            for (int i = 0; i < 10; i++)
+            foreach (var warship in Warships)
             {
-                for (int j = 0; j < 10; j++)
+                foreach (var ship in warship.Value)
                 {
-                    if (field.map[i, j].Status == CellStatus.HasShip || field.map[i, j].Status == CellStatus.HasShipHidden)
+                    for (var i = 0; i < ship.LargeOfShip; i++)
                     {
-                        return;
+                        if (field.map[ship.Coordinates[i].Y, ship.Coordinates[i].X].Status == CellStatus.HasShip ||
+                            field.map[ship.Coordinates[i].Y, ship.Coordinates[i].X].Status == CellStatus.HasShipHidden)
+                            return;
                     }
                 }
             }
@@ -125,9 +143,7 @@ namespace SB2
                 "Message",
                 MessageBoxButtons.OK);
             if (result == DialogResult.OK)
-            {
                 Application.Exit();
-            }
         }
     }
 }

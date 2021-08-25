@@ -14,137 +14,173 @@ namespace SB2
 
         public Field(bool player)
         {
-            if (player == true)
-            {
-                for (int i = 0; i < 10; i++)
-                {
-                    for (int j = 0; j < 10; j++)
-                    {
-                        map[i, j] = new Cell(j, i, new Point(((j + 1) * 29) + 100, ((i + 1) * 29) + 10), new Size(30, 30));
-                    }
-                }
-            }
+            int x;
+            if (player)
+                x = 100;
+
             else
+                x = 500;
+
+            for (int i = 0; i < 10; i++)
             {
-                for (int i = 0; i < 10; i++)
+                for (int j = 0; j < 10; j++)
                 {
-                    for (int j = 0; j < 10; j++)
-                    {
-                        map[i, j] = new Cell(j, i, new Point(((j + 1) * 29) + 500, ((i + 1) * 29) + 10), new Size(30, 30));
-                    }
+                    map[i, j] = new Cell(j, i, new Point(((j + 1) * 29) + x, ((i + 1) * 29) + 10), new Size(30, 30));
                 }
             }
         }
 
-        private bool CheckCoordinates(int x, int y)
+        public bool CheckCoordinates(int x, int y)
         {
             if (x > 9 || x < 0 || y > 9 || y < 0)
-            {
                 return false;
-            }
+
             return true;
         }
 
         private bool CheckCell(int x, int y)
         {
-            if (!CheckCoordinates(x, y))
+            if (!CheckCoordinates(x, y) || map[y, x].Status != CellStatus.Empty)
                 return false;
 
-            if (map[y, x].Status != CellStatus.Empty)
-            {
-                return false;
-            }
             return true;
         }
 
         public void BlockCells(Cell cell, Ship ship, bool player)
         {
-            int x = cell.Coordinates.X;
-            int y = cell.Coordinates.Y;
+            var x = cell.Coordinates.X;
+            var y = cell.Coordinates.Y;
+
             if (CheckCell(x, y))
             {
                 switch (ship.LargeOfShip)
                 {
                     case 1:
-                        ship.SetCoordinates(this, 0, x, y, player);
-                        ship.BlockCells(this);
+                        ship.SetCoordinates(this, x, y, player, true);
+                        ship.ManageCells(this, true, player, false);
                         break;
+
                     case 2:
                         if (CheckCell(x + 1, y))
                         {
-                            ship.SetCoordinates(this, 0, x, y, player);
-                            ship.SetCoordinates(this, 1, x + 1, y, player);
-                            ship.BlockCells(this);
+                            ship.SetCoordinates(this, x, y, player, true);
+                            ship.ManageCells(this, true, player, false);
                             return;
                         }
                         if (CheckCell(x - 1, y))
                         {
-                            ship.SetCoordinates(this, 0, x, y, player);
-                            ship.SetCoordinates(this, 1, x - 1, y, player);
-                            ship.BlockCells(this);
+                            ship.SetCoordinates(this, x, y, player, false);
+                            ship.ManageCells(this, true, player, false);
+                            return;
                         }
                         break;
+
                     case 3:
                         if (CheckCell(x + 1, y) && CheckCell(x + 2, y))
                         {
-                            ship.SetCoordinates(this, 0, x, y, player);
-                            ship.SetCoordinates(this, 1, x + 1, y, player);
-                            ship.SetCoordinates(this, 2, x + 2, y, player);
-                            ship.BlockCells(this);
+                            ship.SetCoordinates(this, x, y, player, true);
+                            ship.ManageCells(this, true, player, false);
                             return;
                         }
                         if (CheckCell(x - 1, y) && CheckCell(x - 2, y))
                         {
-                            ship.SetCoordinates(this, 0, x, y, player);
-                            ship.SetCoordinates(this, 1, x - 1, y, player);
-                            ship.SetCoordinates(this, 2, x - 2, y, player);
-                            ship.BlockCells(this);
+                            ship.SetCoordinates(this, x, y, player, false);
+                            ship.ManageCells(this, true, player, false);
+                            return;
                         }
                         break;
+
                     case 4:
                         if (CheckCell(x + 1, y) && CheckCell(x + 2, y) && CheckCell(x + 3, y))
                         {
-                            ship.SetCoordinates(this, 0, x, y, player);
-                            ship.SetCoordinates(this, 1, x + 1, y, player);
-                            ship.SetCoordinates(this, 2, x + 2, y, player);
-                            ship.SetCoordinates(this, 3, x + 3, y, player);
-                            ship.BlockCells(this);
+                            ship.SetCoordinates(this, x, y, player, true);
+                            ship.ManageCells(this, true, player, false);
                             return;
                         }
                         if (CheckCell(x - 1, y) && CheckCell(x - 2, y) && CheckCell(x - 3, y))
                         {
-                            ship.SetCoordinates(this, 0, x, y, player);
-                            ship.SetCoordinates(this, 1, x - 1, y, player);
-                            ship.SetCoordinates(this, 2, x - 2, y, player);
-                            ship.SetCoordinates(this, 3, x - 3, y, player);
-                            ship.BlockCells(this);
+                            ship.SetCoordinates(this, x, y, player, false);
+                            ship.ManageCells(this, true, player, false);
                             return;
                         }
                         break;
                 }
             }
         }
-        public void BlockShipCell(int x, int y)
-        {
-            if (!CheckCoordinates(x, y))
-                return;
 
-            if (map[y, x].Status == CellStatus.Empty)
+        public void TakeCoordinates(int x, int y, bool blockCells, bool player, bool deadShip)
+        {
+            Coordinates[] coordinates = new Coordinates[9];
+            coordinates[0] = new Coordinates(x, y);
+            coordinates[1] = new Coordinates(x + 1, y);
+            coordinates[2] = new Coordinates(x + 1, y + 1);
+            coordinates[3] = new Coordinates(x, y + 1);
+            coordinates[4] = new Coordinates(x - 1, y + 1);
+            coordinates[5] = new Coordinates(x - 1, y);
+            coordinates[6] = new Coordinates(x - 1, y - 1);
+            coordinates[7] = new Coordinates(x, y - 1);
+            coordinates[8] = new Coordinates(x + 1, y - 1);
+
+            if (blockCells && !deadShip)
             {
-                map[y, x].Status = CellStatus.Blocked;
-                map[y, x].BackColor = Color.Black;
+                BlockShipCell(coordinates, player);
+                return;
+            }
+
+            if(blockCells && deadShip)
+            {
+                BlockDeadShipCells(coordinates);
+                return;
+            }
+
+            UnblockDeletedShipCell(coordinates);
+        }
+
+        private void BlockShipCell(Coordinates[] coordinates, bool player)
+        {
+            for (var i = 0; i < coordinates.Length; i++)
+            {
+                var x = coordinates[i].X;
+                var y = coordinates[i].Y;
+
+                if (CheckCoordinates(x, y) && map[y, x].Status == CellStatus.Empty)
+                {
+                    map[y, x].Status = CellStatus.Blocked;
+
+                    if (player)
+                        map[y, x].BackColor = Color.Black;
+                }
             }
         }
 
-        public void UnblockDeletedShipCell(int x, int y)
+        private void UnblockDeletedShipCell(Coordinates[] coordinates)
         {
-            if (!CheckCoordinates(x, y))
-                return;
-
-            if (map[y, x].Status == CellStatus.HasShip || map[y, x].Status == CellStatus.Blocked)
+            for (var i = 0; i < coordinates.Length; i++)
             {
-                map[y, x].Status = CellStatus.Empty;
-                map[y, x].BackColor = Button.DefaultBackColor;
+                var x = coordinates[i].X;
+                var y = coordinates[i].Y;
+
+                if (CheckCoordinates(x, y) && (map[y, x].Status == CellStatus.HasShip || map[y, x].Status == CellStatus.Blocked))
+                {
+                    map[y, x].Status = CellStatus.Empty;
+                    map[y, x].BackColor = Button.DefaultBackColor;
+                }
+            }
+        }
+
+        private void BlockDeadShipCells(Coordinates[] coordinates)
+        {
+            for(var i = 0; i < coordinates.Length; i++)
+            {
+                var x = coordinates[i].X;
+                var y = coordinates[i].Y;
+                
+                if(CheckCoordinates(x, y) && map[y, x].Status != CellStatus.ShipDamaged)
+                {
+                    map[y, x].Status = CellStatus.Blocked;
+                    map[y, x].BackColor = Color.Black;
+                }
+
             }
         }
 
@@ -154,20 +190,19 @@ namespace SB2
             cell.BackColor = color;
         }
 
-        public void CellHasShip(int x, int y)
+        public void CellHasShip(int x, int y, bool player)
         {
-            if (!CheckCell(x, y))
-                return;
-            map[y, x].Status = CellStatus.HasShip;
-            map[y, x].BackColor = Color.Blue;
+            if (player)
+            {
+                map[y, x].Status = CellStatus.HasShip;
+                map[y, x].BackColor = Color.Blue;
+            }
+            else
+            {
+                map[y, x].Status = CellStatus.HasShipHidden;
+            }
         }
-        public void CellHasShipHidden(int x, int y)
-        {
-            if (!CheckCell(x, y))
-                return;
-            map[y, x].Status = CellStatus.HasShipHidden;
-            map[y, x].BackColor = Color.Green;
-        }
+
         public void BattleColors(Cell cell)
         {
             if (cell.Status != CellStatus.HasShip && cell.Status != CellStatus.HasShipHidden)
@@ -177,16 +212,18 @@ namespace SB2
             }
         }
 
-        public bool CheckShipCell(Cell cell, Ship ship)
+        public bool CheckShipCell(Cell cell, int largeOfShip)
         {
-            int x = cell.Coordinates.X;
-            int y = cell.Coordinates.Y;
+            var x = cell.Coordinates.X;
+            var y = cell.Coordinates.Y;
+
             if (CheckCell(x, y))
             {
-                switch (ship.LargeOfShip)
+                switch (largeOfShip)
                 {
                     case 1:
                         return true;
+
                     case 2:
                         if (CheckCell(x + 1, y))
                         {
@@ -197,6 +234,7 @@ namespace SB2
                             return true;
                         }
                         return false;
+
                     case 3:
                         if (CheckCell(x + 1, y) && CheckCell(x + 2, y))
                         {
@@ -207,6 +245,7 @@ namespace SB2
                             return true;
                         }
                         return false;
+
                     case 4:
                         if (CheckCell(x + 1, y) && CheckCell(x + 2, y) && CheckCell(x + 3, y))
                         {
@@ -220,14 +259,6 @@ namespace SB2
                 }
             }
             return false;
-        }
-        public bool CheckCellForShoot(Cell cell)
-        {
-            if (!CheckCoordinates(cell.Coordinates.X, cell.Coordinates.Y))
-                return false;
-            if (cell.Status == CellStatus.EmptyStriked || cell.Status == CellStatus.ShipDamaged || cell.Status == CellStatus.Blocked)
-                return false;
-            return true;
         }
     }
 }

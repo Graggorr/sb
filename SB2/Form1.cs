@@ -43,7 +43,7 @@ namespace SB2
             {
                 Text = "Start",
                 Size = new Size(60, 20),
-                Location = new Point(650, 650)
+                Location = new Point(450, 450)
             };
             Controls.Add(startButton);
             startButton.Click += new EventHandler(StartGame);
@@ -93,7 +93,7 @@ namespace SB2
         {
             int x, y;
             Random rng = new Random();
-            while (bot.Count != 10)
+            while (bot.Count < 10)
             {
                 x = rng.Next(0, 9);
                 y = rng.Next(0, 9);
@@ -104,19 +104,19 @@ namespace SB2
         private void SetPlayerShips(object sender, EventArgs e)
         {
             Cell clickedCell = sender as Cell;
-            if (SingleRankButton.Checked == true)
+            if (SingleRankButton.Checked)
             {
                 player.SetShips(Player.SINGLEKEY, clickedCell);
             }
-            if (DoubleRankButton.Checked == true)
+            if (DoubleRankButton.Checked)
             {
                 player.SetShips(Player.DOUBLEKEY, clickedCell);
             }
-            if (TripleRankButton.Checked == true)
+            if (TripleRankButton.Checked)
             {
                 player.SetShips(Player.TRIPLEKEY, clickedCell);
             }
-            if (QuadroRankButton.Checked == true)
+            if (QuadroRankButton.Checked)
             {
                 player.SetShips(Player.QUADROKEY, clickedCell);
             }
@@ -127,7 +127,6 @@ namespace SB2
             foreach (var ship in player.ShipStack)
             {
                 player.RemoveShips(ship);
-                player.BlockCellsAfterRemove();
                 break;
             }
         }
@@ -137,7 +136,7 @@ namespace SB2
             Cell clickedcell = sender as Cell;
             if (player.yourTurn == true)
             {
-                if (clickedcell.Status != CellStatus.EmptyStriked && clickedcell.Status != CellStatus.ShipDamaged)
+                if (clickedcell.Status != CellStatus.EmptyStriked && clickedcell.Status != CellStatus.ShipDamaged && clickedcell.Status != CellStatus.Blocked)
                 {
                     if (clickedcell.Status == CellStatus.Empty)
                     {
@@ -152,11 +151,8 @@ namespace SB2
                         bot.field.ChangeColor(clickedcell, CellStatus.ShipDamaged, Color.Red);
 
                         if (bot.DeadShip(clickedcell))
-                        {
-                            MessageBox.Show("Ship is dead");
-                        }
+                            bot.CheckShips();
                     }
-                    bot.CheckShips();
                 }
                 return;
             }
