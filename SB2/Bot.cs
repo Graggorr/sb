@@ -13,12 +13,15 @@ namespace SB2
         private int shotY { get; set; }
         private bool rememberedShot { get; set; }
         private bool shotIsGot { get; set; }
+        private List<Coordinates> StackedCoordinates { get; set; }
+        private Coordinates c { get; set; }
 
         public Bot()
         {
             field = new Field(false);
             Count = 0;
             yourTurn = false;
+            StackedCoordinates = new List<Coordinates>();
             Initialize();
         }
 
@@ -46,6 +49,12 @@ namespace SB2
             }
         }
 
+        public void StackCoordinate(int x, int y)
+        {
+            c = new Coordinates(x, y);
+            StackedCoordinates.Add(c);
+        }
+
         public void Strike(Player player)
         {
             if (yourTurn)
@@ -61,8 +70,15 @@ namespace SB2
                 else
                 {
                     Random rng = new Random();
-                    x = rng.Next(0, 9);
-                    y = rng.Next(0, 9);
+                repeat:
+                    x = rng.Next(0, 10);
+                    y = rng.Next(0, 10);
+                    foreach(var coordinates in StackedCoordinates)
+                    {
+                        if (x == coordinates.X && y == coordinates.Y)
+                            goto repeat;
+                    }
+                    StackCoordinate(x, y);
                 }
 
                 Shoot(x, y, player);
@@ -134,7 +150,10 @@ namespace SB2
             }
 
             else
+            {
+                player.CheckShips();
                 return;
+            }
         }
         private void RememberCoordinates(int x, int y)
         {
