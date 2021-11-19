@@ -14,6 +14,7 @@ namespace SB2
     {
         Player player;
         Bot bot;
+        public const int FieldSize = 10;
         public Form1()
         {
             InitializeComponent();
@@ -25,9 +26,9 @@ namespace SB2
             player = new Player();
             bot = new Bot();
             SetBotShips();
-            for (int i = 0; i < 10; i++)
+            for (int i = 0; i < Form1.FieldSize; i++)
             {
-                for (int j = 0; j < 10; j++)
+                for (int j = 0; j < Form1.FieldSize; j++)
                 {
                     Controls.Add(player.field.map[i, j]);
                     Controls.Add(bot.field.map[i, j]);
@@ -55,9 +56,9 @@ namespace SB2
             {
                 Button clickedButton = sender as Button;
                 {
-                    for (int i = 0; i < 10; i++)
+                    for (int i = 0; i < Form1.FieldSize; i++)
                     {
-                        for (int j = 0; j < 10; j++)
+                        for (int j = 0; j < Form1.FieldSize; j++)
                         {
                             player.field.map[i, j].Click -= new EventHandler(SetPlayerShips);
                             player.field.BattleColors(player.field.map[i, j]);
@@ -80,9 +81,9 @@ namespace SB2
         }
         private void War()
         {
-            for (int i = 0; i < 10; i++)
+            for (int i = 0; i < Form1.FieldSize; i++)
             {
-                for (int j = 0; j < 10; j++)
+                for (int j = 0; j < Form1.FieldSize; j++)
                 {
                     bot.field.map[i, j].Click += new EventHandler(PlayerStrike);
                 }
@@ -93,7 +94,8 @@ namespace SB2
         {
             int x, y;
             Random rng = new Random();
-            while (bot.Count < 10)
+            const int shipsCount = 10;
+            while (bot.Count < shipsCount)
             {
                 x = rng.Next(0, 9);
                 y = rng.Next(0, 9);

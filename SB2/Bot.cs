@@ -148,7 +148,6 @@ namespace SB2
                         RememberCoordinates(x - 1, y);
                 }
             }
-
             else
             {
                 player.CheckShips();

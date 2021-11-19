@@ -21,9 +21,9 @@ namespace SB2
             else
                 x = 500;
 
-            for (int i = 0; i < 10; i++)
+            for (int i = 0; i < Form1.FieldSize; i++)
             {
-                for (int j = 0; j < 10; j++)
+                for (int j = 0; j < Form1.FieldSize; j++)
                 {
                     map[i, j] = new Cell(j, i, new Point(((j + 1) * 29) + x, ((i + 1) * 29) + 10), new Size(30, 30));
                 }
